@@ -81,6 +81,15 @@ export function initDatabase() {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS invitations (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      inviter_id TEXT NOT NULL REFERENCES users(id),
+      invitee_id TEXT NOT NULL REFERENCES users(id),
+      role TEXT NOT NULL DEFAULT 'editor',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS files (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,

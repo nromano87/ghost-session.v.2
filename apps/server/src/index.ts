@@ -12,6 +12,7 @@ import versionRoutes from './routes/versions.js';
 import commentRoutes from './routes/comments.js';
 import fileRoutes from './routes/files.js';
 import sessionRoutes from './routes/sessions.js';
+import invitationRoutes from './routes/invitations.js';
 import { setupWebSocket } from './ws/index.js';
 import { initDatabase } from './db/index.js';
 
@@ -31,6 +32,7 @@ app.route('/api/v1/projects/:id/versions', versionRoutes);
 app.route('/api/v1/projects/:id/comments', commentRoutes);
 app.route('/api/v1/projects/:id/files', fileRoutes);
 app.route('/api/v1/projects/:id/sessions', sessionRoutes);
+app.route('/api/v1/invitations', invitationRoutes);
 
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
 import { db } from '../db/index.js';
-import { projects, projectMembers, tracks, users } from '../db/schema.js';
+import { projects, projectMembers, tracks, users, invitations } from '../db/schema.js';
 import { eq, or, and, desc, like } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
 
@@ -153,14 +153,29 @@ projectRoutes.post('/:id/members', async (c) => {
   }
   if (!invitee) throw new HTTPException(404, { message: 'User not found' });
 
-  // Insert or ignore if already a member
-  try {
-    db.insert(projectMembers).values({
-      projectId, userId: invitee.id, role: body.role, joinedAt: new Date().toISOString(),
-    }).run();
-  } catch {}
+  // Check if already a member
+  const existing = db.select().from(projectMembers)
+    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, invitee.id)))
+    .limit(1).all();
+  if (existing.length > 0) {
+    return c.json({ success: true, message: 'Already a member' });
+  }
 
-  return c.json({ success: true });
+  // Create a pending invitation instead of directly adding
+  const invId = crypto.randomUUID();
+  try {
+    db.insert(invitations).values({
+      id: invId,
+      projectId,
+      inviterId: user.id,
+      inviteeId: invitee.id,
+      role: body.role,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    }).run();
+  } catch {} // duplicate invitation
+
+  return c.json({ success: true, message: 'Invitation sent' });
 });
 
 export default projectRoutes;

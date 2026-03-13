@@ -63,6 +63,13 @@ public:
     void uploadSession (const juce::String& projectId, const juce::File& file,
                         std::function<void (bool, const juce::var&)> cb);
 
+    // Invitations
+    void getInvitations (std::function<void (bool, const juce::var&)> cb);
+    void acceptInvitation (const juce::String& invitationId,
+                           std::function<void (bool, const juce::var&)> cb);
+    void declineInvitation (const juce::String& invitationId,
+                            std::function<void (bool, const juce::var&)> cb);
+
     // Legacy aliases for existing UI code
     void getCollaborators (const juce::String& id, std::function<void (bool, const juce::var&)> cb) { getMembers(id, std::move(cb)); }
     void getPlugins (const juce::String&, std::function<void (bool, const juce::var&)> cb) { cb(true, juce::var(juce::Array<juce::var>())); }

@@ -29,6 +29,37 @@
   }
 }
 
+@keyframes playhead-pulse {
+  0%, 100% { opacity: 0.6; box-shadow: 0 0 4px rgba(0, 255, 200, 0.3); }
+  50% { opacity: 1; box-shadow: 0 0 8px rgba(0, 255, 200, 0.6); }
+}
+
+.playhead-pulse {
+  animation: playhead-pulse 1.5s ease-in-out infinite;
+}
+
+/* Track volume slider */
+input[type="range"].track-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: #2A2A4A;
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"].track-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #EEEEF5;
+  cursor: pointer;
+}
+input[type="range"].track-volume::-webkit-slider-thumb:hover {
+  background: #00FFC8;
+}
+
 @layer components {
   .ghost-card {
     @apply bg-ghost-surface border border-ghost-border rounded-lg;

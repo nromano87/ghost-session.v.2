@@ -302,6 +302,38 @@ void LocalClient::inviteMember (const juce::String& projectId, const juce::Strin
 }
 
 //==============================================================================
+// Invitations
+//==============================================================================
+void LocalClient::getInvitations (std::function<void (bool, const juce::var&)> cb)
+{
+    makeRequest ("GET", "/invitations", juce::var(),
+        [cb = std::move(cb)](bool ok, const juce::var& resp)
+        {
+            cb(ok, ok ? resp["data"] : resp);
+        });
+}
+
+void LocalClient::acceptInvitation (const juce::String& invitationId,
+                                     std::function<void (bool, const juce::var&)> cb)
+{
+    makeRequest ("POST", "/invitations/" + invitationId + "/accept", juce::var(new juce::DynamicObject()),
+        [cb = std::move(cb)](bool ok, const juce::var& resp)
+        {
+            cb(ok, resp);
+        });
+}
+
+void LocalClient::declineInvitation (const juce::String& invitationId,
+                                      std::function<void (bool, const juce::var&)> cb)
+{
+    makeRequest ("POST", "/invitations/" + invitationId + "/decline", juce::var(new juce::DynamicObject()),
+        [cb = std::move(cb)](bool ok, const juce::var& resp)
+        {
+            cb(ok, resp);
+        });
+}
+
+//==============================================================================
 // Core request handler
 //==============================================================================
 void LocalClient::makeRequest (const juce::String& method, const juce::String& endpoint,

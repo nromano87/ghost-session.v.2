@@ -80,6 +80,16 @@ export const comments = sqliteTable('comments', {
   updatedAt: timestamp('updated_at').notNull(),
 });
 
+export const invitations = sqliteTable('invitations', {
+  id: uuid().primaryKey(),
+  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  inviterId: text('inviter_id').notNull().references(() => users.id),
+  inviteeId: text('invitee_id').notNull().references(() => users.id),
+  role: text('role', { enum: ['editor', 'viewer'] }).notNull().default('editor'),
+  status: text('status', { enum: ['pending', 'accepted', 'declined'] }).notNull().default('pending'),
+  createdAt: timestamp('created_at').notNull(),
+});
+
 export const files = sqliteTable('files', {
   id: uuid().primaryKey(),
   projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),

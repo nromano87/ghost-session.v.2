@@ -11,7 +11,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <button
-      onClick={() => navigate(`/projects/${project.id}`)}
+      onClick={() => navigate(`/sessions/${project.id}`)}
       className="ghost-card p-5 text-left hover:border-ghost-green/30 transition-colors w-full group"
     >
       <h3 className="text-base font-semibold text-ghost-text-primary group-hover:text-ghost-green transition-colors truncate">

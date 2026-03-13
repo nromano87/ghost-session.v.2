@@ -73,6 +73,7 @@ target_sources(GhostSession PRIVATE
     Source/UI/LoginPanel.cpp
     Source/UI/ProjectListPanel.cpp
     Source/UI/ProjectView.cpp
+    Source/UI/SessionWorkspaceView.cpp
 
     # File Transfer
     Source/FileTransfer/FileTransferManager.cpp

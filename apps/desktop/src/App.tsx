@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import AppShell from './components/layout/AppShell';
+import SessionShell from './components/layout/SessionShell';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
+import SessionWorkspacePage from './pages/SessionWorkspacePage';
 import SettingsPage from './pages/SettingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -18,6 +20,21 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+
+      {/* Session workspace — full DAW-style layout */}
+      <Route
+        path="/sessions"
+        element={
+          <ProtectedRoute>
+            <SessionShell />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<SessionWorkspacePage />} />
+        <Route path=":id" element={<SessionWorkspacePage />} />
+      </Route>
+
+      {/* Standard app layout */}
       <Route
         path="/"
         element={
