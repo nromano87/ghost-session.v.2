@@ -405,21 +405,21 @@ export default function ChatPanel() {
       )}
 
       {/* Chat messages — newest at top */}
-      <div className="flex-1 overflow-y-auto px-3 pt-3 pb-1 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2 space-y-2">
         {chatMessages.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
+          <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ghost-text-muted/30">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             <p className="text-[15px] text-ghost-text-secondary font-semibold text-center">Start the conversation</p>
-            <p className="text-[13px] text-ghost-text-muted text-center">Send a message to<br />your collaborators</p>
+            <p className="text-[14px] text-ghost-text-muted text-center">Send a message to<br />your collaborators</p>
           </div>
         )}
         {[...chatMessages].reverse().map((msg, i) => {
           const origIndex = chatMessages.length - 1 - i;
           return (
-          <div key={origIndex} className="group hover:bg-ghost-surface-hover/30 -mx-1 px-1 py-1 rounded transition-colors relative">
-            <p className="text-[13px] leading-snug">
+          <div key={origIndex} className="group hover:bg-ghost-surface-hover/30 -mx-2 px-2 py-1.5 rounded transition-colors relative">
+            <p className="text-[14px] leading-snug">
               <span className="font-semibold" style={{ color: msg.colour }}>{msg.displayName}</span>
               <span className="text-ghost-text-secondary ml-1.5">{msg.text}</span>
             </p>
@@ -441,7 +441,7 @@ export default function ChatPanel() {
       </div>
 
       {/* Chat input — Discord style */}
-      <div className="px-2 pb-4 pt-0 -mt-1 relative">
+      <div className="px-3 pb-3 pt-1 relative">
         {/* Emoji picker */}
         {showEmoji && (
           <div
@@ -474,9 +474,9 @@ export default function ChatPanel() {
             </div>
           </div>
         )}
-        <div className="flex items-center bg-ghost-surface-hover rounded-lg">
+        <div className="flex items-center bg-ghost-surface-hover rounded-xl">
           <input
-            className="flex-1 min-w-0 bg-transparent text-[13px] text-ghost-text-primary placeholder:text-ghost-text-muted pl-3 py-2.5 pr-2 outline-none"
+            className="flex-1 min-w-0 bg-transparent text-[14px] text-ghost-text-primary placeholder:text-ghost-text-muted pl-4 py-3 pr-2 outline-none"
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}

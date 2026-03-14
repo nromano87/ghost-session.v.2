@@ -37,6 +37,17 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const socket = getSocket();
     if (!socket) return;
 
+    // Clean up any existing listeners to prevent stacking
+    if (reconnectHandler) {
+      socket.off('connect', reconnectHandler);
+      reconnectHandler = null;
+    }
+    socket.off('presence-update');
+    socket.off('user-joined');
+    socket.off('user-left');
+    socket.off('chat-message');
+    socket.off('delete-chat-message');
+
     joinProject(projectId);
     set({ currentProjectId: projectId, isConnected: true });
 

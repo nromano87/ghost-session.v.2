@@ -60,13 +60,13 @@ function ProjectListSidebar({
   return (
     <div className="flex flex-col h-full">
       {/* Ghost Session branding */}
-      <div className="px-3 pt-3.5 pb-3 flex items-center gap-2.5">
+      <div className="px-4 pt-4 pb-3 flex items-center gap-2.5">
         <svg width="26" height="26" viewBox="0 0 26 26" fill="none" className="shrink-0">
           <circle cx="13" cy="13" r="11.5" stroke="#00FFC8" strokeWidth="2" fill="none" />
           <circle cx="13" cy="13" r="7" stroke="#00FFC8" strokeWidth="2" fill="none" />
           <circle cx="13" cy="13" r="2.5" fill="#00FFC8" />
         </svg>
-        <span className="text-[15px] font-extrabold tracking-widest uppercase" style={{ background: 'linear-gradient(135deg, #00FFC8, #00B4D8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Ghost Session</span>
+        <span className="text-[13px] font-extrabold tracking-[0.2em] uppercase whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #00FFC8, #00B4D8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Ghost Session</span>
       </div>
 
       <FriendsPanel friends={friends} />
@@ -76,13 +76,13 @@ function ProjectListSidebar({
         <div>
           <button
             onClick={() => setFavoritesOpen((v) => !v)}
-            className="h-9 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
+            className="h-10 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
           >
             <span className="flex items-center gap-1.5">
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${favoritesOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[13px] font-bold text-ghost-text-secondary uppercase tracking-widest">
+              <span className="text-[14px] font-bold text-ghost-text-secondary uppercase tracking-widest">
                 Favorites
               </span>
             </span>
@@ -93,7 +93,7 @@ function ProjectListSidebar({
                 <button
                   key={p.id}
                   onClick={() => onSelect(p.id)}
-                  className={`w-full text-left px-2 py-1.5 text-[15px] rounded-md transition-colors ${
+                  className={`w-full text-left px-2 py-2 text-[15px] rounded-md transition-colors ${
                     selectedId === p.id && !selectedPackId
                       ? 'bg-ghost-surface-hover text-white font-semibold'
                       : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
@@ -111,7 +111,7 @@ function ProjectListSidebar({
                 <button
                   key={sp.id}
                   onClick={() => onSelectPack(sp.id)}
-                  className={`w-full text-left px-2 py-1.5 text-[15px] rounded-md transition-colors ${
+                  className={`w-full text-left px-2 py-2 text-[15px] rounded-md transition-colors ${
                     selectedPackId === sp.id
                       ? 'bg-ghost-surface-hover text-white font-semibold'
                       : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
@@ -138,13 +138,13 @@ function ProjectListSidebar({
         <div>
           <button
             onClick={() => setProjectsOpen((v) => !v)}
-            className="h-9 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
+            className="h-10 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
           >
             <span className="flex items-center gap-1.5">
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${projectsOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[13px] font-bold text-ghost-text-secondary uppercase tracking-widest">
+              <span className="text-[14px] font-bold text-ghost-text-secondary uppercase tracking-widest">
                 Projects
               </span>
             </span>
@@ -160,7 +160,7 @@ function ProjectListSidebar({
               {projects.map((p) => (
                 <div
                   key={p.id}
-                  className={`group flex items-center w-full px-2 py-1.5 text-[15px] rounded-md transition-colors cursor-pointer ${
+                  className={`group flex items-center w-full px-2 py-2 text-[15px] rounded-md transition-colors cursor-pointer ${
                     selectedId === p.id && !selectedPackId
                       ? 'bg-ghost-surface-hover text-white font-semibold'
                       : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
@@ -192,13 +192,13 @@ function ProjectListSidebar({
         <div>
           <button
             onClick={() => setPacksOpen((v) => !v)}
-            className="h-9 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
+            className="h-10 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
           >
             <span className="flex items-center gap-1.5">
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${packsOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[13px] font-bold text-ghost-text-secondary uppercase tracking-widest">
+              <span className="text-[14px] font-bold text-ghost-text-secondary uppercase tracking-widest">
                 Sample Packs
               </span>
             </span>
@@ -218,7 +218,7 @@ function ProjectListSidebar({
                 <div
                   key={sp.id}
                   onClick={() => onSelectPack(sp.id)}
-                  className={`group flex items-center w-full px-2 py-1.5 text-[15px] rounded-md transition-colors cursor-pointer ${
+                  className={`group flex items-center w-full px-2 py-2 text-[15px] rounded-md transition-colors cursor-pointer ${
                     selectedPackId === sp.id
                       ? 'bg-ghost-surface-hover text-white font-semibold'
                       : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
@@ -257,13 +257,13 @@ function FriendsPanel({ friends }: { friends: { id: string; displayName: string;
     <div className="shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="h-9 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
+        className="h-10 px-3 flex items-center justify-between w-full hover:bg-ghost-surface-hover/30 transition-colors"
       >
         <span className="flex items-center gap-1.5">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${open ? 'rotate-90' : ''}`}>
             <polygon points="2,0 8,5 2,10" />
           </svg>
-          <span className="text-[13px] font-bold text-ghost-text-secondary uppercase tracking-widest">
+          <span className="text-[14px] font-bold text-ghost-text-secondary uppercase tracking-widest">
             Friends — {friends.length}
           </span>
         </span>
@@ -375,12 +375,12 @@ function NotificationPopup({ invitations, onAccept, onDecline, notifications, on
   onMarkRead: () => void;
 }) {
   return (
-    <div className="absolute right-14 top-12 w-72 bg-[#050508] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.6)] z-50 border border-white/5 max-h-80 overflow-y-auto">
+    <div className="absolute right-14 top-12 w-80 bg-[#050508] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.6)] z-50 border border-white/5 max-h-80 overflow-y-auto">
       {/* Invitations section */}
       {invitations.length > 0 && (
         <>
           <div className="p-3 pb-1">
-            <span className="text-[11px] font-semibold text-ghost-text-secondary uppercase tracking-wide">Invitations</span>
+            <span className="text-[12px] font-semibold text-ghost-text-secondary uppercase tracking-wide">Invitations</span>
           </div>
           <div>
             {invitations.map((inv) => (
@@ -401,8 +401,8 @@ function NotificationPopup({ invitations, onAccept, onDecline, notifications, on
       {notifications.length > 0 && (
         <>
           <div className="p-3 pb-1 flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-ghost-text-secondary uppercase tracking-wide">Messages</span>
-            <button onClick={onMarkRead} className="text-[10px] text-ghost-purple hover:text-ghost-purple/80 font-medium">Mark all read</button>
+            <span className="text-[12px] font-semibold text-ghost-text-secondary uppercase tracking-wide">Messages</span>
+            <button onClick={onMarkRead} className="text-[11px] text-ghost-purple hover:text-ghost-purple/80 font-medium">Mark all read</button>
           </div>
           <div>
             {notifications.map((n) => (
@@ -411,8 +411,8 @@ function NotificationPopup({ invitations, onAccept, onDecline, notifications, on
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-ghost-text-secondary leading-snug">{n.message}</p>
-                  <p className="text-[9px] text-ghost-text-muted mt-0.5">
+                  <p className="text-[12px] text-ghost-text-secondary leading-snug">{n.message}</p>
+                  <p className="text-[10px] text-ghost-text-muted mt-0.5">
                     {new Date(n.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                   </p>
                 </div>
@@ -423,7 +423,7 @@ function NotificationPopup({ invitations, onAccept, onDecline, notifications, on
       )}
 
       {invitations.length === 0 && notifications.length === 0 && (
-        <div className="p-4 text-center text-xs text-ghost-text-muted italic">No new notifications</div>
+        <div className="p-4 text-center text-[13px] text-ghost-text-muted italic">No new notifications</div>
       )}
     </div>
   );
@@ -490,7 +490,7 @@ function InviteModal({ open, onClose, projectId }: { open: boolean; onClose: () 
   return (
     <div className="absolute right-2 top-12 w-72 bg-[#050508] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.6)] z-50 p-4 border border-white/5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] font-semibold text-ghost-text-secondary uppercase tracking-wide">Invite Collaborator</span>
+        <span className="text-[12px] font-semibold text-ghost-text-secondary uppercase tracking-wide">Invite Collaborator</span>
         <button onClick={onClose} className="text-ghost-text-muted hover:text-ghost-text-primary text-sm">X</button>
       </div>
       <div className="relative">
@@ -515,7 +515,7 @@ function InviteModal({ open, onClose, projectId }: { open: boolean; onClose: () 
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-medium text-white truncate">{u.displayName}</p>
-                  <p className="text-[11px] text-ghost-text-muted truncate">{u.email}</p>
+                  <p className="text-[12px] text-ghost-text-muted truncate">{u.email}</p>
                 </div>
               </button>
             ))}
@@ -1121,10 +1121,10 @@ function SamplePackContentView({
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
-      <div className="flex-1 overflow-y-auto px-3 pt-3 pb-0">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2">
         {/* Pack info bar */}
-        <div className="mb-3">
-          <div className="flex items-center gap-3 bg-ghost-surface/80 rounded-xl px-4 py-2.5 min-w-0">
+        <div className="mb-4">
+          <div className="flex items-center gap-3 bg-ghost-surface/80 rounded-xl px-5 py-3 min-w-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5865F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
               <path d="M9 18V5l12-2v13" />
               <circle cx="6" cy="18" r="3" />
@@ -1135,11 +1135,11 @@ function SamplePackContentView({
               value={pack.name}
               onChange={(e) => onRenamePack(pack.id, e.target.value)}
             />
-            <span className="text-[11px] text-ghost-text-muted shrink-0">{items.length} sample{items.length !== 1 ? 's' : ''}</span>
+            <span className="text-[12px] text-ghost-text-muted shrink-0">{items.length} sample{items.length !== 1 ? 's' : ''}</span>
             {pack.updatedAt && (
               <>
                 <div className="w-px h-4 bg-ghost-border shrink-0" />
-                <span className="text-[11px] text-ghost-text-muted flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+                <span className="text-[12px] text-ghost-text-muted flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-60">
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
@@ -1171,7 +1171,7 @@ function SamplePackContentView({
                       }
                       setShowPackMenu(false);
                     }}
-                    className="w-full px-3 py-1.5 text-[12px] text-left text-ghost-error-red hover:bg-ghost-error-red/10 transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-1.5 text-[13px] text-left text-ghost-error-red hover:bg-ghost-error-red/10 transition-colors flex items-center gap-2"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="3 6 5 6 21 6" />
@@ -1190,8 +1190,8 @@ function SamplePackContentView({
           const { user } = useAuthStore.getState();
           const displayMembers = members.length > 0 ? members : user ? [{ userId: user.id, displayName: user.displayName, role: 'owner' }] : [];
           return displayMembers.length > 0 && (
-            <div className="mb-3">
-              <div className="flex items-center gap-4 bg-ghost-surface/80 rounded-xl px-4 py-2.5">
+            <div className="mb-4">
+              <div className="flex items-center gap-4 bg-ghost-surface/80 rounded-xl px-5 py-3">
                 <div className="flex items-center -space-x-2.5">
                   {[...displayMembers].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any) => (
                     <div key={m.userId} className="relative group cursor-pointer transition-transform hover:scale-110 hover:z-10" title={m.displayName}>
@@ -1208,21 +1208,21 @@ function SamplePackContentView({
                   <div className="flex items-center gap-1 flex-wrap">
                     {[...displayMembers].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any, i: number) => (
                       <span key={m.userId} className="flex items-center gap-1">
-                        <span className={`text-[13px] ${m.role === 'owner' ? 'font-bold text-ghost-host-gold' : 'font-medium text-ghost-text-primary'}`}>{m.displayName}</span>
-                        {m.role === 'owner' && <span className="text-[9px] font-bold uppercase tracking-wider text-ghost-host-gold/70 bg-ghost-host-gold/10 px-1.5 py-px rounded">host</span>}
+                        <span className={`text-[14px] ${m.role === 'owner' ? 'font-bold text-ghost-host-gold' : 'font-medium text-ghost-text-primary'}`}>{m.displayName}</span>
+                        {m.role === 'owner' && <span className="text-[10px] font-bold uppercase tracking-wider text-ghost-host-gold/70 bg-ghost-host-gold/10 px-1.5 py-px rounded">host</span>}
                         {i < displayMembers.length - 1 && <span className="text-ghost-text-muted/40 mx-0.5">/</span>}
                       </span>
                     ))}
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-ghost-online-green animate-pulse" />
-                    <span className="text-[13px] text-ghost-text-muted">{displayMembers.length} collaborator{displayMembers.length !== 1 ? 's' : ''} online</span>
+                    <span className="text-[14px] text-ghost-text-muted">{displayMembers.length} collaborator{displayMembers.length !== 1 ? 's' : ''} online</span>
                   </div>
                 </div>
 
                 <button
                   onClick={onInvite}
-                  className="shrink-0 px-4 py-1.5 text-[13px] font-bold bg-ghost-green text-black rounded-lg hover:bg-ghost-green/85 transition-colors shadow-[0_0_12px_rgba(0,255,200,0.25)]"
+                  className="shrink-0 px-4 py-1.5 text-[14px] font-bold bg-ghost-green text-black rounded-lg hover:bg-ghost-green/85 transition-colors shadow-[0_0_12px_rgba(0,255,200,0.25)]"
                 >
                   Invite
                 </button>
@@ -1279,7 +1279,7 @@ function SamplePackContentView({
         </div>
 
         {/* Sample rows */}
-        <div className="space-y-1.5 mt-1.5">
+        <div className="space-y-2 mt-2">
           {items.map((sample: any) => (
             <StemRow
               key={sample.id}
@@ -1751,11 +1751,11 @@ export default function PluginLayout() {
           </div>
 
           {/* Right section aligned with chat panel */}
-          <div className="w-60 shrink-0 border-l border-ghost-border flex items-center justify-center px-3 py-3 gap-3">
+          <div className="w-64 shrink-0 border-l border-ghost-border flex items-center justify-center px-4 py-3 gap-4">
             {/* Add Friend button */}
             <button
               onClick={() => { setShowFriendSearch(!showFriendSearch); setFriendSearchQuery(''); }}
-              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-[13px] bg-ghost-green text-black hover:bg-ghost-green/85 transition-colors shadow-[0_0_12px_rgba(0,255,200,0.25)]"
+              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-[14px] bg-ghost-green text-black hover:bg-ghost-green/85 transition-colors shadow-[0_0_12px_rgba(0,255,200,0.25)]"
               title="Add Friend"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1802,13 +1802,16 @@ export default function PluginLayout() {
           />
         )}
         {showNotifs && (
-          <NotificationPopup
-            invitations={invitations}
-            onAccept={(id) => { acceptInvite(id); }}
-            onDecline={(id) => { declineInvite(id); }}
-            notifications={chatNotifications}
-            onMarkRead={() => { api.markNotificationsRead().then(() => setChatNotifications([])).catch(() => {}); }}
-          />
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowNotifs(false)} />
+            <NotificationPopup
+              invitations={invitations}
+              onAccept={(id) => { acceptInvite(id); }}
+              onDecline={(id) => { declineInvite(id); }}
+              notifications={chatNotifications}
+              onMarkRead={() => { api.markNotificationsRead().then(() => setChatNotifications([])).catch(() => {}); }}
+            />
+          </>
         )}
         {showInvite && selectedProjectId && (
           <InviteModal open={showInvite} onClose={() => setShowInvite(false)} projectId={selectedProjectId} />
@@ -1822,10 +1825,10 @@ export default function PluginLayout() {
           {selectedProjectId && currentProject ? (
             <>
               <div className="flex-1 flex flex-col min-w-0">
-              <div className="flex-1 overflow-y-auto px-3 pt-3 pb-0">
+              <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2">
                 {/* Project info bar */}
-                <div className="mb-3">
-                  <div className="flex items-center gap-3 bg-ghost-surface/80 rounded-xl px-4 py-2.5 min-w-0">
+                <div className="mb-4">
+                  <div className="flex items-center gap-3 bg-ghost-surface/80 rounded-xl px-5 py-3 min-w-0">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00FFC8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                     </svg>
@@ -1847,11 +1850,11 @@ export default function PluginLayout() {
                         }
                       }}
                     />
-                    <span className="text-[11px] text-ghost-text-muted uppercase tracking-wider font-semibold shrink-0">BPM</span>
-                    <span className="text-[13px] font-bold text-white shrink-0" style={{ fontFamily: "'Consolas', monospace" }}>{currentProject.tempo || 120}</span>
+                    <span className="text-[12px] text-ghost-text-muted uppercase tracking-wider font-semibold shrink-0">BPM</span>
+                    <span className="text-[14px] font-bold text-white shrink-0" style={{ fontFamily: "'Consolas', monospace" }}>{currentProject.tempo || 120}</span>
                     <div className="w-px h-4 bg-ghost-border shrink-0" />
-                    <span className="text-[11px] text-ghost-text-muted uppercase tracking-wider font-semibold shrink-0">Key</span>
-                    <span className="text-[13px] font-bold text-white shrink-0" style={{ fontFamily: "'Consolas', monospace" }}>{currentProject.key || 'C'}</span>
+                    <span className="text-[12px] text-ghost-text-muted uppercase tracking-wider font-semibold shrink-0">Key</span>
+                    <span className="text-[14px] font-bold text-white shrink-0" style={{ fontFamily: "'Consolas', monospace" }}>{currentProject.key || 'C'}</span>
                     {currentProject.updatedAt && (
                       <>
                         <div className="w-px h-4 bg-ghost-border shrink-0" />
@@ -1882,7 +1885,7 @@ export default function PluginLayout() {
                         <div className="absolute right-0 top-full mt-1 w-40 bg-[#050508] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.6)] z-50 border border-white/5 py-1">
                           <button
                             onClick={handleShareProject}
-                            className="w-full px-3 py-1.5 text-[12px] text-left text-ghost-text-secondary hover:bg-ghost-surface-hover hover:text-white transition-colors flex items-center gap-2"
+                            className="w-full px-3 py-1.5 text-[13px] text-left text-ghost-text-secondary hover:bg-ghost-surface-hover hover:text-white transition-colors flex items-center gap-2"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
@@ -1895,7 +1898,7 @@ export default function PluginLayout() {
                           {currentProject.ownerId === user?.id ? (
                             <button
                               onClick={handleDeleteProject}
-                              className="w-full px-3 py-1.5 text-[12px] text-left text-ghost-error-red hover:bg-ghost-error-red/10 transition-colors flex items-center gap-2"
+                              className="w-full px-3 py-1.5 text-[13px] text-left text-ghost-error-red hover:bg-ghost-error-red/10 transition-colors flex items-center gap-2"
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6" />
@@ -1906,7 +1909,7 @@ export default function PluginLayout() {
                           ) : (
                             <button
                               onClick={handleLeaveProject}
-                              className="w-full px-3 py-1.5 text-[12px] text-left text-ghost-error-red hover:bg-ghost-error-red/10 transition-colors flex items-center gap-2"
+                              className="w-full px-3 py-1.5 text-[13px] text-left text-ghost-error-red hover:bg-ghost-error-red/10 transition-colors flex items-center gap-2"
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -1923,8 +1926,8 @@ export default function PluginLayout() {
                 </div>
 
                 {/* Collaborators bar */}
-                <div className="mb-3">
-                <div className="flex items-center gap-4 bg-ghost-surface/80 rounded-xl px-4 py-2.5">
+                <div className="mb-4">
+                <div className="flex items-center gap-4 bg-ghost-surface/80 rounded-xl px-5 py-3">
                   <div className="flex items-center -space-x-2.5">
                     {[...members].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any) => (
                       <div key={m.userId} className="relative group cursor-pointer transition-transform hover:scale-110 hover:z-10" title={m.displayName}>
@@ -1941,21 +1944,21 @@ export default function PluginLayout() {
                     <div className="flex items-center gap-1 flex-wrap">
                       {[...members].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any, i: number) => (
                         <span key={m.userId} className="flex items-center gap-1">
-                          <span className={`text-[13px] ${m.role === 'owner' ? 'font-bold text-ghost-host-gold' : 'font-medium text-ghost-text-primary'}`}>{m.displayName}</span>
-                          {m.role === 'owner' && <span className="text-[9px] font-bold uppercase tracking-wider text-ghost-host-gold/70 bg-ghost-host-gold/10 px-1.5 py-px rounded">host</span>}
+                          <span className={`text-[14px] ${m.role === 'owner' ? 'font-bold text-ghost-host-gold' : 'font-medium text-ghost-text-primary'}`}>{m.displayName}</span>
+                          {m.role === 'owner' && <span className="text-[10px] font-bold uppercase tracking-wider text-ghost-host-gold/70 bg-ghost-host-gold/10 px-1.5 py-px rounded">host</span>}
                           {i < members.length - 1 && <span className="text-ghost-text-muted/40 mx-0.5">/</span>}
                         </span>
                       ))}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-ghost-online-green animate-pulse" />
-                      <span className="text-[13px] text-ghost-text-muted">{members.length} collaborator{members.length !== 1 ? 's' : ''} online</span>
+                      <span className="text-[14px] text-ghost-text-muted">{members.length} collaborator{members.length !== 1 ? 's' : ''} online</span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => { setShowVersionHistory(!showVersionHistory); if (!showVersionHistory && selectedProjectId) fetchVersions(selectedProjectId); }}
-                    className={`shrink-0 px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
+                    className={`shrink-0 px-3 py-1.5 text-[13px] font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
                       showVersionHistory
                         ? 'bg-ghost-purple text-white'
                         : 'bg-ghost-surface-light border border-ghost-border text-ghost-text-secondary hover:text-white'
@@ -1973,7 +1976,7 @@ export default function PluginLayout() {
 
                   <button
                     onClick={() => setShowInvite(!showInvite)}
-                    className="shrink-0 px-4 py-1.5 text-[13px] font-bold bg-ghost-green text-black rounded-lg hover:bg-ghost-green/85 transition-colors shadow-[0_0_12px_rgba(0,255,200,0.25)]"
+                    className="shrink-0 px-4 py-1.5 text-[14px] font-bold bg-ghost-green text-black rounded-lg hover:bg-ghost-green/85 transition-colors shadow-[0_0_12px_rgba(0,255,200,0.25)]"
                   >
                     Invite
                   </button>
@@ -1983,10 +1986,10 @@ export default function PluginLayout() {
 
                 {/* Version History panel */}
                 {showVersionHistory && (
-                  <div className="mb-3 bg-ghost-surface/80 rounded-xl overflow-hidden border border-ghost-border/50">
+                  <div className="mb-4 bg-ghost-surface/80 rounded-xl overflow-hidden border border-ghost-border/50">
                     <div className="px-4 py-2 border-b border-ghost-border/30 flex items-center justify-between">
-                      <span className="text-[12px] font-bold text-ghost-text-secondary uppercase tracking-wider">Version History</span>
-                      <span className="text-[10px] text-ghost-text-muted">{versions.length} snapshot{versions.length !== 1 ? 's' : ''}</span>
+                      <span className="text-[13px] font-bold text-ghost-text-secondary uppercase tracking-wider">Version History</span>
+                      <span className="text-[11px] text-ghost-text-muted">{versions.length} snapshot{versions.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="max-h-48 overflow-y-auto">
                       {versions.length === 0 ? (
@@ -2000,17 +2003,17 @@ export default function PluginLayout() {
                             <div className="w-2.5 h-2.5 rounded-full border-2 border-ghost-purple bg-ghost-bg shrink-0" />
 
                             <div className="flex-1 min-w-0">
-                              <p className="text-[12px] text-ghost-text-primary font-medium truncate">{v.name}</p>
+                              <p className="text-[13px] text-ghost-text-primary font-medium truncate">{v.name}</p>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] text-ghost-text-muted">{v.createdByName || 'Unknown'}</span>
-                                <span className="text-[10px] text-ghost-green font-medium">
+                                <span className="text-[11px] text-ghost-text-muted">{v.createdByName || 'Unknown'}</span>
+                                <span className="text-[11px] text-ghost-green font-medium">
                                   {new Date(v.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                                 </span>
                               </div>
                             </div>
 
                             {/* Version number */}
-                            <span className="text-[10px] font-mono text-ghost-purple bg-ghost-purple/10 px-2 py-0.5 rounded shrink-0">
+                            <span className="text-[11px] font-mono text-ghost-purple bg-ghost-purple/10 px-2 py-0.5 rounded shrink-0">
                               V{v.versionNumber}
                             </span>
 
@@ -2019,7 +2022,7 @@ export default function PluginLayout() {
                               <button
                                 onClick={() => handleRevert(v.id)}
                                 disabled={reverting}
-                                className="opacity-0 group-hover:opacity-100 text-[10px] font-semibold px-2 py-1 bg-ghost-surface-light border border-ghost-border rounded text-ghost-text-secondary hover:text-white hover:border-ghost-purple transition-all shrink-0"
+                                className="opacity-0 group-hover:opacity-100 text-[11px] font-semibold px-2 py-1 bg-ghost-surface-light border border-ghost-border rounded text-ghost-text-secondary hover:text-white hover:border-ghost-purple transition-all shrink-0"
                               >
                                 {reverting ? '...' : 'Revert'}
                               </button>
@@ -2035,7 +2038,7 @@ export default function PluginLayout() {
                 <FullMixDropZone projectId={selectedProjectId!} onFilesAdded={() => fetchProject(selectedProjectId!)} />
 
                 {/* Full Mix rows */}
-                <div className="space-y-1.5 mt-1.5">
+                <div className="space-y-2 mt-2">
                   {fullMixTracks.map((t: any) => (
                     <StemRow
                       key={t.id}
@@ -2052,12 +2055,12 @@ export default function PluginLayout() {
                 </div>
 
                 {/* Drop zone for adding stems */}
-                <div className="mt-3">
+                <div className="mt-4">
                   <DropZone projectId={selectedProjectId!} onFilesAdded={() => fetchProject(selectedProjectId!)} />
                 </div>
 
                 {/* Stem rows */}
-                <div className="space-y-1.5 mt-1.5">
+                <div className="space-y-2 mt-2">
                   {currentProject.tracks.filter((t: any) => t.type !== 'fullmix').map((t) => (
                     <StemRow
                       key={t.id}
@@ -2077,7 +2080,7 @@ export default function PluginLayout() {
               </div>
 
               {/* Right panel: chat */}
-              <div className="w-60 shrink-0 border-l border-ghost-border flex flex-col min-h-0 overflow-hidden">
+              <div className="w-64 shrink-0 border-l border-ghost-border flex flex-col min-h-0 overflow-hidden">
                 <ChatPanel />
               </div>
             </>
@@ -2093,7 +2096,7 @@ export default function PluginLayout() {
                 onInvite={() => setShowInvite(true)}
               />
               {/* Right panel: chat */}
-              <div className="w-60 shrink-0 border-l border-ghost-border flex flex-col min-h-0 overflow-hidden">
+              <div className="w-64 shrink-0 border-l border-ghost-border flex flex-col min-h-0 overflow-hidden">
                 <ChatPanel />
               </div>
             </>
