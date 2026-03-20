@@ -8,6 +8,9 @@ import ChatPanel from '../session/ChatPanel';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useAudioStore } from '../../stores/audioStore';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const SERVER_BASE = API_BASE.replace('/api/v1', '');
+
 interface Invitation {
   id: string;
   projectName: string;
@@ -676,7 +679,7 @@ const audioBufferCache = new Map<string, AudioBuffer>();
 const downloadPromises = new Map<string, Promise<ArrayBuffer>>();
 
 function debugLog(msg: string) {
-  fetch('http://localhost:3000/api/v1/debug', { method: 'POST', body: msg }).catch(() => {});
+  fetch(`${API_BASE}/debug`, { method: 'POST', body: msg }).catch(() => {});
 }
 
 function getAudioData(projectId: string, fileId: string): Promise<{ buffer: AudioBuffer; channelData: Float32Array }> {
@@ -1601,7 +1604,7 @@ function SocialAudioPlayer({ audioFileId }: { audioFileId: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    const url = `http://localhost:3000/api/v1/social/audio/${audioFileId}`;
+    const url = `${API_BASE}/social/audio/${audioFileId}`;
     const token = localStorage.getItem('ghost_token');
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
@@ -1716,7 +1719,7 @@ function SocialFeed({ user, friends }: { user: any; friends: any[] }) {
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
   const [postComments, setPostComments] = useState<Record<string, any[]>>({});
   const authHeader = { Authorization: `Bearer ${localStorage.getItem('ghost_token')}` };
-  const BASE = 'http://localhost:3000/api/v1/social';
+  const BASE = `${API_BASE}/social`;
 
   const loadFeed = () => { setLoading(true); fetch(`${BASE}/feed`, { headers: authHeader }).then(r => r.json()).then(d => { if (d.data) setPosts(d.data); }).catch(() => {}).finally(() => setLoading(false)); };
   useEffect(() => { loadFeed(); }, []);
@@ -1735,7 +1738,7 @@ function SocialFeed({ user, friends }: { user: any; friends: any[] }) {
         const formData = new FormData();
         formData.append('file', dropFile);
         // Use a special shared uploads endpoint or reuse existing
-        const uploadRes = await fetch('http://localhost:3000/api/v1/social/upload', {
+        const uploadRes = await fetch(`${API_BASE}/social/upload`, {
           method: 'POST', headers: authHeader, body: formData,
         });
         const uploadData = await uploadRes.json();
@@ -1937,7 +1940,7 @@ export default function PluginLayout() {
 
   const handleCreateBeat = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/projects', {
+      const res = await fetch(`${API_BASE}/projects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('ghost_token')}` },
         body: JSON.stringify({ name: 'New Beat', projectType: 'beat' }),
@@ -2129,7 +2132,7 @@ export default function PluginLayout() {
     if (!selectedProjectId || !currentProject) return;
     setShowProjectMenu(false);
     try {
-      await fetch('http://localhost:3000/api/v1/social/posts', {
+      await fetch(`${API_BASE}/social/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('ghost_token')}` },
         body: JSON.stringify({ text: `Check out my project "${currentProject.name}" 🎵`, projectId: selectedProjectId }),
@@ -2200,7 +2203,7 @@ export default function PluginLayout() {
   const fetchInvitations = async () => {
     try {
       const res = await fetch(
-        (import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1') + '/invitations',
+        API_BASE + '/invitations',
         { headers: { Authorization: `Bearer ${useAuthStore.getState().token}` } }
       );
       const json = await res.json();
@@ -2211,7 +2214,7 @@ export default function PluginLayout() {
   const acceptInvite = async (id: string) => {
     try {
       await fetch(
-        (import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1') + `/invitations/${id}/accept`,
+        API_BASE + `/invitations/${id}/accept`,
         { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${useAuthStore.getState().token}` }, body: '{}' }
       );
       fetchInvitations();
@@ -2222,7 +2225,7 @@ export default function PluginLayout() {
   const declineInvite = async (id: string) => {
     try {
       await fetch(
-        (import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1') + `/invitations/${id}/decline`,
+        API_BASE + `/invitations/${id}/decline`,
         { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${useAuthStore.getState().token}` }, body: '{}' }
       );
       fetchInvitations();
