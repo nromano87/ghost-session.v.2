@@ -129,9 +129,6 @@ export default function ChatPanel() {
       // For camera offers, we need localStream; for screen offers, receiver doesn't need a stream
       const sourceStream = sType === 'camera' ? localStream : null;
 
-      // Only require localStream for camera offers we need to respond to
-      if (sType === 'camera' && !localStream) return;
-
       const pc = createPeerConnection(fromUserId, '', sType, sourceStream);
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await pc.createAnswer();

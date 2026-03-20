@@ -41,7 +41,7 @@ function ProjectListSidebar({
   onCreatePack: () => void;
   friends: { id: string; displayName: string; avatarUrl: string | null }[];
 }) {
-  const [favoritesOpen, setFavoritesOpen] = useState(true);
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(true);
   const [packsOpen, setPacksOpen] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => {
@@ -81,7 +81,7 @@ function ProjectListSidebar({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${favoritesOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[15px] font-bold text-ghost-text-muted uppercase tracking-[0.06em]">
+              <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
                 Favorites
               </span>
             </span>
@@ -143,7 +143,7 @@ function ProjectListSidebar({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${projectsOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[15px] font-bold text-ghost-text-muted uppercase tracking-[0.06em]">
+              <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
                 Projects
               </span>
             </span>
@@ -197,7 +197,7 @@ function ProjectListSidebar({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${packsOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[15px] font-bold text-ghost-text-muted uppercase tracking-[0.06em]">
+              <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
                 Sample Packs
               </span>
             </span>
@@ -262,7 +262,7 @@ function FriendsPanel({ friends }: { friends: { id: string; displayName: string;
           <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${open ? 'rotate-90' : ''}`}>
             <polygon points="2,0 8,5 2,10" />
           </svg>
-          <span className="text-[15px] font-bold text-ghost-text-muted uppercase tracking-[0.06em]">
+          <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
             Friends — {friends.length}
           </span>
         </span>
@@ -2055,18 +2055,17 @@ export default function PluginLayout() {
                   <div className="flex items-center -space-x-2.5">
                     {[...members].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any) => (
                       <div key={m.userId} className="relative group cursor-pointer transition-transform hover:scale-110 hover:z-10" title={m.displayName} style={{ border: '3px solid #0F0F18', borderRadius: '50%' }}>
-                        <Avatar name={m.displayName || '?'} src={m.avatarUrl} size="md" colour={m.role === 'owner' ? '#F0B232' : '#23A559'} />
+                        <Avatar name={m.displayName || '?'} src={m.avatarUrl} size="md" />
                         <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-ghost-online-green" style={{ border: '2.5px solid #0F0F18' }} />
                       </div>
                     ))}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 flex-wrap">
-                      {[...members].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any, i: number) => (
+                      {[...members].filter((m: any) => m.role === 'owner').map((m: any) => (
                         <span key={m.userId} className="flex items-center gap-1">
-                          <span className={`text-[14px] ${m.role === 'owner' ? 'font-bold text-ghost-host-gold' : 'font-medium text-ghost-text-primary'}`}>{m.displayName}</span>
-                          {m.role === 'owner' && <span className="text-[10px] font-bold uppercase tracking-wider text-ghost-host-gold/70 bg-ghost-host-gold/10 px-1.5 py-px rounded">host</span>}
-                          {i < members.length - 1 && <span className="text-ghost-text-muted/40 mx-0.5">/</span>}
+                          <span className="text-[14px] font-bold text-ghost-host-gold">{m.displayName}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ghost-host-gold/70 bg-ghost-host-gold/10 px-1.5 py-px rounded">host</span>
                         </span>
                       ))}
                     </div>

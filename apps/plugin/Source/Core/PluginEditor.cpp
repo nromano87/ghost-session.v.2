@@ -43,7 +43,7 @@ void GhostSessionEditor::paint(juce::Graphics& g)
     {
         g.setColour(juce::Colour(0xFF8B5CF6));
         g.setFont(juce::Font(18.0f));
-        g.drawText("Loading Ghost Session...",
+        g.drawText("Welcome to Ghost Session",
                    getLocalBounds(), juce::Justification::centred);
     }
 }

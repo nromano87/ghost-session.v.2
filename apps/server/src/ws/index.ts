@@ -9,8 +9,10 @@ import { registerWebRTCHandlers } from './webrtc.js';
 
 // Collaborator colour palette
 const COLLAB_COLOURS = [
-  '#00FFC8', '#8B5CF6', '#FF6B6B', '#4ECDC4',
-  '#FFD93D', '#FF8A5C', '#6C5CE7', '#E056C1',
+  '#1ABC9C', '#2ECC71', '#3498DB', '#9B59B6',
+  '#E91E63', '#F1C40F', '#E67E22', '#E74C3C',
+  '#00BCD4', '#FF6B6B', '#A29BFE', '#FD79A8',
+  '#00CEC9', '#6C5CE7', '#FDCB6E', '#55EFC4',
 ];
 
 /** Deterministic colour based on user ID */
