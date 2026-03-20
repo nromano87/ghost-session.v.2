@@ -290,7 +290,7 @@ ProjectView::ProjectView(GhostSessionProcessor& processor)
     bounceDeleteBtn.onClick = [this] {
         if (proc.isPlaying() && currentPlayingStemId.isEmpty())
             stopAll();
-        bounceFile = {};
+        bounceFile = juce::File();
         hasBounce = false;
         bounceWaveform.setAudioFile({});
         if (onBounceCleared) onBounceCleared();
