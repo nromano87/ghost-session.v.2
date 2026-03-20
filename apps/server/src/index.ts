@@ -28,6 +28,14 @@ const app = new Hono();
 // Global middleware
 app.use('*', cors());
 
+// Debug endpoint for client-side logging
+app.post('/api/v1/debug', async (c) => {
+  const body = await c.req.text();
+  const fs = await import('node:fs');
+  fs.appendFileSync('C:\\Users\\austi\\ghost_client_debug.log', new Date().toISOString() + ' ' + body + '\n');
+  return c.json({ ok: true });
+});
+
 // API routes
 app.route('/api/v1/auth', auth);
 app.route('/api/v1/projects', projectRoutes);

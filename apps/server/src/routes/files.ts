@@ -76,10 +76,7 @@ fileRoutes.post('/upload', async (c) => {
   const filePath = join(projectDir, `${fileId}_${file.name}`);
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  const ws = createWriteStream(filePath);
-  await new Promise<void>((resolve, reject) => {
-    ws.write(buffer, (err) => { if (err) reject(err); else { ws.end(); resolve(); } });
-  });
+  await import('node:fs/promises').then(fsp => fsp.writeFile(filePath, buffer));
 
   db.insert(files).values({
     id: fileId, projectId, uploadedBy: user.id,
@@ -102,9 +99,10 @@ fileRoutes.get('/:fileId/download', async (c) => {
     const fileStat = await stat(filePath);
     const stream = createReadStream(filePath);
 
-    c.header('Content-Type', file.mimeType || 'application/octet-stream');
-    c.header('Content-Disposition', `attachment; filename="${file.fileName}"`);
+    c.header('Content-Type', file.mimeType || 'audio/wav');
+    c.header('Content-Disposition', `inline; filename="${file.fileName}"`);
     c.header('Content-Length', fileStat.size.toString());
+    c.header('Accept-Ranges', 'bytes');
 
     return new Response(Readable.toWeb(stream) as ReadableStream, {
       headers: c.res.headers,

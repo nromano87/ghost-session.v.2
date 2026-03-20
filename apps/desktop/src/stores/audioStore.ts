@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { useAuthStore } from './authStore';
 import { api } from '../lib/api';
 
 interface LoadedTrack {
@@ -21,6 +20,7 @@ interface AudioState {
   soloPlayingTrackId: string | null;
   soloCurrentTime: number;
   soloDuration: number;
+  loadError: string | null;
 
   // Actions
   loadTrack: (trackId: string, fileId: string, projectId: string) => Promise<void>;
@@ -151,41 +151,38 @@ export const useAudioStore = create<AudioState>((set, get) => {
     soloPlayingTrackId: null,
     soloCurrentTime: 0,
     soloDuration: 0,
+    loadError: null,
 
     loadTrack: async (trackId, fileId, projectId) => {
-      const ctx = getCtx();
-
       // Check cache first
       if (bufferCache.has(fileId)) {
-        const buffer = bufferCache.get(fileId)!;
-        const { loadedTracks } = get();
-        loadedTracks.set(trackId, {
-          id: trackId, buffer, source: null, gainNode: null,
-          volume: 1, muted: false, soloed: false,
+        const cachedBuf = bufferCache.get(fileId)!;
+        set((s) => {
+          const m = new Map(s.loadedTracks);
+          m.set(trackId, { id: trackId, buffer: cachedBuf, source: null, gainNode: null, volume: 1, muted: false, soloed: false });
+          return { loadedTracks: m };
         });
-        set({ loadedTracks: new Map(loadedTracks) });
         recalcDuration();
         return;
       }
 
       try {
-        const url = api.getDirectDownloadUrl(projectId, fileId);
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
-        });
-        const arrayBuffer = await res.arrayBuffer();
-        const buffer = await ctx.decodeAudioData(arrayBuffer);
+        const arrayBuffer = await api.downloadFile(projectId, fileId);
+        // Use a temporary AudioContext for decoding (avoids suspended-context issues)
+        const tempCtx = new AudioContext();
+        const buffer = await tempCtx.decodeAudioData(arrayBuffer);
+        await tempCtx.close();
         bufferCache.set(fileId, buffer);
 
-        const { loadedTracks } = get();
-        loadedTracks.set(trackId, {
-          id: trackId, buffer, source: null, gainNode: null,
-          volume: 1, muted: false, soloed: false,
+        set((s) => {
+          const m = new Map(s.loadedTracks);
+          m.set(trackId, { id: trackId, buffer, source: null, gainNode: null, volume: 1, muted: false, soloed: false });
+          return { loadedTracks: m };
         });
-        set({ loadedTracks: new Map(loadedTracks) });
         recalcDuration();
-      } catch (err) {
-        console.error('Failed to load track audio:', trackId, err);
+      } catch (err: any) {
+        console.error('[AudioStore] Failed to load track:', trackId, 'fileId:', fileId, err);
+        set({ loadError: `Track ${trackId}: ${err?.message || err}` });
       }
     },
 

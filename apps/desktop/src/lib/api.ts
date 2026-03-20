@@ -129,6 +129,18 @@ export const api = {
   getDirectDownloadUrl: (projectId: string, fileId: string) =>
     `${BASE_URL}/projects/${projectId}/files/${fileId}/download${authToken ? `?token=${authToken}` : ''}`,
 
+  // Download file as ArrayBuffer (for audio decoding)
+  downloadFile: async (projectId: string, fileId: string): Promise<ArrayBuffer> => {
+    const headers: Record<string, string> = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE_URL}/projects/${projectId}/files/${fileId}/download`, { headers });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Download failed: HTTP ${res.status} — ${text}`);
+    }
+    return res.arrayBuffer();
+  },
+
   // Sample Packs
   listSamplePacks: () => request<any[]>('GET', '/sample-packs'),
   createSamplePack: (data: { name: string }) => request<any>('POST', '/sample-packs', data),

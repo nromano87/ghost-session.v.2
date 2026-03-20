@@ -551,6 +551,61 @@ function InviteModal({ open, onClose, projectId }: { open: boolean; onClose: () 
 
 // Stores raw audio channel data for pixel-accurate rendering
 const rawDataCache = new Map<string, Float32Array>();
+// Stores decoded AudioBuffers for playback
+const audioBufferCache = new Map<string, AudioBuffer>();
+// Stores in-flight download promises to avoid duplicate fetches
+const downloadPromises = new Map<string, Promise<ArrayBuffer>>();
+
+function debugLog(msg: string) {
+  fetch('http://localhost:3000/api/v1/debug', { method: 'POST', body: msg }).catch(() => {});
+}
+
+function getAudioData(projectId: string, fileId: string): Promise<{ buffer: AudioBuffer; channelData: Float32Array }> {
+  debugLog('getAudioData called: ' + fileId);
+
+  if (audioBufferCache.has(fileId)) {
+    debugLog('cache hit: ' + fileId);
+    const buffer = audioBufferCache.get(fileId)!;
+    const channelData = rawDataCache.get(fileId) || buffer.getChannelData(0);
+    return Promise.resolve({ buffer, channelData });
+  }
+
+  let downloadPromise = downloadPromises.get(fileId);
+  if (!downloadPromise) {
+    debugLog('starting download: ' + fileId);
+    downloadPromise = api.downloadFile(projectId, fileId);
+    downloadPromises.set(fileId, downloadPromise);
+  } else {
+    debugLog('reusing download: ' + fileId);
+  }
+
+  return downloadPromise.then((buf) => {
+    debugLog('download done: ' + fileId + ' size=' + buf.byteLength);
+    if (audioBufferCache.has(fileId)) {
+      debugLog('another caller already decoded: ' + fileId);
+      const buffer = audioBufferCache.get(fileId)!;
+      return { buffer, channelData: rawDataCache.get(fileId) || buffer.getChannelData(0) };
+    }
+    debugLog('decoding: ' + fileId);
+    const ctx = new AudioContext();
+    return ctx.decodeAudioData(buf.slice(0)).then((decoded) => {
+      ctx.close();
+      debugLog('decode SUCCESS: ' + fileId + ' duration=' + decoded.duration);
+      audioBufferCache.set(fileId, decoded);
+      const channelData = decoded.getChannelData(0);
+      rawDataCache.set(fileId, channelData);
+      downloadPromises.delete(fileId);
+      return { buffer: decoded, channelData };
+    }).catch((err) => {
+      ctx.close();
+      debugLog('decode FAILED: ' + fileId + ' err=' + err.message);
+      throw err;
+    });
+  }).catch((err) => {
+    debugLog('getAudioData FAILED: ' + fileId + ' err=' + err.message);
+    throw err;
+  });
+}
 
 function Waveform({
   seed, height = 60, fileId, projectId, showPlayhead = false, trackId,
@@ -571,26 +626,12 @@ function Waveform({
     if (rawDataCache.has(fileId)) { setRawData(rawDataCache.get(fileId)!); return; }
 
     let cancelled = false;
-    const url = api.getDirectDownloadUrl(projectId, fileId);
-    const token = useAuthStore.getState().token;
 
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.arrayBuffer();
+    getAudioData(projectId, fileId)
+      .then(({ channelData }) => {
+        if (!cancelled) setRawData(channelData);
       })
-      .then((buf) => {
-        const ctx = new AudioContext();
-        return ctx.decodeAudioData(buf).finally(() => ctx.close());
-      })
-      .then((audioBuffer) => {
-        if (cancelled) return;
-        const data = audioBuffer.getChannelData(0);
-        rawDataCache.set(fileId, data);
-        setRawData(data);
-      })
-      .catch((err) => {
-        console.error('[Waveform] Failed to load audio for fileId=' + fileId, err);
+      .catch(() => {
         if (!cancelled) setLoadFailed(true);
       });
 
@@ -834,18 +875,42 @@ function StemRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
-  const { loadedTracks, loadTrack, playSoloTrack, stopSoloTrack, soloPlayingTrackId } = useAudioStore();
-  const loaded = loadedTracks.has(trackId);
-  const isThisPlaying = soloPlayingTrackId === trackId;
-
-  // Auto-load track audio when it has a file
-  useEffect(() => {
-    if (fileId && projectId && !loaded) {
-      loadTrack(trackId, fileId, projectId);
-    }
-  }, [fileId, projectId, trackId, loaded]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const ctxRef = useRef<AudioContext | null>(null);
 
   const downloadUrl = fileId && projectId ? api.getDirectDownloadUrl(projectId, fileId) : null;
+
+  // Poll the audioBufferCache until the Waveform child populates it
+  const [ready, setReady] = useState(fileId ? audioBufferCache.has(fileId) : false);
+  useEffect(() => {
+    if (!fileId || ready) return;
+    const id = setInterval(() => {
+      if (audioBufferCache.has(fileId)) { setReady(true); clearInterval(id); }
+    }, 200);
+    return () => clearInterval(id);
+  }, [fileId, ready]);
+
+  const handlePlay = () => {
+    if (isPlaying && sourceRef.current) {
+      try { sourceRef.current.stop(); } catch {}
+      sourceRef.current = null;
+      setIsPlaying(false);
+      return;
+    }
+    const buffer = fileId ? audioBufferCache.get(fileId) : null;
+    if (!buffer) return;
+    if (!ctxRef.current) ctxRef.current = new AudioContext();
+    const ctx = ctxRef.current;
+    if (ctx.state === 'suspended') ctx.resume();
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.onended = () => { setIsPlaying(false); sourceRef.current = null; };
+    source.start(0);
+    sourceRef.current = source;
+    setIsPlaying(true);
+  };
 
   const handleDownload = () => {
     if (downloadUrl) {
@@ -862,28 +927,14 @@ function StemRow({
 
   const handleDragStart = (e: React.DragEvent) => {
     if (!downloadUrl) return;
-
-    // Kill the browser drag completely — clear all data, set to none
     e.dataTransfer.clearData();
     e.dataTransfer.effectAllowed = 'none';
     e.dataTransfer.dropEffect = 'none';
-
-    // Prevent double-trigger
     if (dragTriggeredRef.current) return;
     dragTriggeredRef.current = true;
     setTimeout(() => { dragTriggeredRef.current = false; }, 2000);
-
-    // Trigger JUCE native drag (the only drag Ableton should see)
     const ghostUrl = `ghost://drag-to-daw?url=${encodeURIComponent(downloadUrl)}&fileName=${encodeURIComponent(name + '.wav')}`;
     window.location.href = ghostUrl;
-  };
-
-  const handlePlay = () => {
-    if (isThisPlaying) {
-      stopSoloTrack();
-    } else if (loaded) {
-      playSoloTrack(trackId);
-    }
   };
 
   return (
@@ -897,15 +948,15 @@ function StemRow({
         <button
           onClick={handlePlay}
           className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors ${
-            isThisPlaying
+            isPlaying
               ? 'border-ghost-green text-ghost-green bg-ghost-green/10'
-              : loaded
+              : ready
                 ? 'border-ghost-border text-ghost-text-secondary hover:text-ghost-green hover:border-ghost-green'
                 : 'border-ghost-border text-ghost-text-muted opacity-40'
           }`}
-          disabled={!loaded}
+          disabled={!ready}
         >
-          {isThisPlaying ? (
+          {isPlaying ? (
             <svg width="10" height="10" viewBox="0 0 12 14" fill="currentColor">
               <rect x="0" y="0" width="4" height="14" rx="1" />
               <rect x="8" y="0" width="4" height="14" rx="1" />
@@ -2107,6 +2158,7 @@ export default function PluginLayout() {
                 <FullMixDropZone projectId={selectedProjectId!} onFilesAdded={() => fetchProject(selectedProjectId!)} />
 
                 {/* Full Mix rows */}
+                {fullMixTracks.length > 0 && debugLog('fullMixTracks[0]: id=' + fullMixTracks[0].id + ' fileId=' + fullMixTracks[0].fileId + ' projectId=' + selectedProjectId)}
                 <div className="space-y-2 mt-2">
                   {fullMixTracks.map((t: any) => (
                     <StemRow
