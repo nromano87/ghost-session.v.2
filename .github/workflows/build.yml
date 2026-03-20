@@ -9,6 +9,8 @@ on:
 jobs:
   build-vst-mac:
     runs-on: macos-14
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -24,34 +26,70 @@ jobs:
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
             -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-error"
 
-      - name: Build (show errors only)
+      - name: Build VST3
         run: |
           cd apps/plugin
-          cmake --build build --config Release -j1 2>&1 | tee /tmp/build.log | grep -E "^.*error:" || true
-          echo "--- Last 30 lines ---"
-          tail -30 /tmp/build.log
-          # Check if binary was produced
-          if find build -name "Ghost Session.vst3" -type d | grep -q .; then
-            echo "BUILD SUCCESS"
-          else
-            echo "BUILD FAILED - no VST3 produced"
-            grep "error:" /tmp/build.log | head -20
-            exit 1
-          fi
+          cmake --build build --config Release -j$(sysctl -n hw.ncpu) 2>&1 | grep "error:" || true
+          find build -name "Ghost Session.vst3" -type d | grep -q . || exit 1
 
-      - name: Package plugins
+      - name: Create macOS Installer DMG
         run: |
-          mkdir -p artifacts
-          find apps/plugin/build -name "Ghost Session.vst3" -type d | head -1 | while read dir; do
-            cp -r "$dir" artifacts/
-          done
-          find apps/plugin/build -name "Ghost Session.component" -type d | head -1 | while read dir; do
-            cp -r "$dir" artifacts/
-          done
-          du -sh artifacts/*
+          mkdir -p dmg-content
+          find apps/plugin/build -name "Ghost Session.vst3" -type d | head -1 | xargs -I{} cp -r {} dmg-content/
 
-      - name: Upload VST3 Plugin
+          cat > dmg-content/Install.command << 'INSTALLSCRIPT'
+          #!/bin/bash
+          SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+          echo ""
+          echo "  ╔═══════════════════════════════════════╗"
+          echo "  ║     Ghost Session VST3 Installer      ║"
+          echo "  ╚═══════════════════════════════════════╝"
+          echo ""
+          echo "  Installing Ghost Session VST3 plugin..."
+          echo ""
+          sudo mkdir -p "/Library/Audio/Plug-Ins/VST3"
+          sudo cp -r "$SCRIPT_DIR/Ghost Session.vst3" "/Library/Audio/Plug-Ins/VST3/"
+          echo "  ✓ Installed to /Library/Audio/Plug-Ins/VST3/"
+          echo ""
+          echo "  Open your DAW and scan for new plugins."
+          echo "  Look for 'Ghost Session' by Ghost Audio."
+          echo ""
+          read -p "  Press Enter to close..."
+          INSTALLSCRIPT
+          chmod +x dmg-content/Install.command
+
+          hdiutil create -volname "Ghost Session" \
+            -srcfolder dmg-content \
+            -ov -format UDZO \
+            "Ghost-Session-macOS.dmg"
+
+          ls -la Ghost-Session-macOS.dmg
+
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: Ghost-Session-VST3-macOS
-          path: artifacts/
+          name: Ghost-Session-macOS-Installer
+          path: Ghost-Session-macOS.dmg
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Ghost-Session-macOS.dmg
+          name: "Ghost Session ${{ github.ref_name }}"
+          body: |
+            ## Ghost Session VST3 Plugin for macOS
+
+            **Download `Ghost-Session-macOS.dmg` below.**
+
+            ### Install
+            1. Open the DMG
+            2. Double-click `Install.command`
+            3. Enter your Mac password when prompted
+            4. Open Ableton/Logic and scan for plugins
+            5. Add **Ghost Session** to any track
+
+            ### Requirements
+            - macOS 11+ (Big Sur or later)
+            - Apple Silicon Mac (M1/M2/M3/M4)
+            - Any VST3-compatible DAW
