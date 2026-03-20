@@ -52,13 +52,18 @@ app.route('/api/v1/sample-packs', samplePackRoutes);
 app.route('/api/v1/notifications', notificationRoutes);
 app.route('/api/v1/social', socialRoutes);
 
-// Serve the desktop app build for plugin WebView
+// Serve the desktop app build
 import { serveStatic } from '@hono/node-server/serve-static';
+// Try local public folder first (Railway), then ../desktop/dist (local dev)
+app.use('/app/*', serveStatic({ root: './public', rewriteRequestPath: (p) => p.replace('/app', '') }));
 app.use('/app/*', serveStatic({ root: '../desktop/dist', rewriteRequestPath: (p) => p.replace('/app', '') }));
+app.get('/app', serveStatic({ root: './public', path: '/index.html' }));
 app.get('/app', serveStatic({ root: '../desktop/dist', path: '/index.html' }));
 
-// Also serve at root so the VST3 plugin can load from localhost:3000
+// Serve at root for VST3 plugin and direct access
+app.use('/assets/*', serveStatic({ root: './public' }));
 app.use('/assets/*', serveStatic({ root: '../desktop/dist' }));
+app.get('/', serveStatic({ root: './public', path: '/index.html' }));
 app.get('/', serveStatic({ root: '../desktop/dist', path: '/index.html' }));
 
 // Health check
