@@ -88,6 +88,22 @@ app.delete('/api/v1/admin/reset-all', async (c) => {
   return c.json({ success: true, message: 'All data deleted' });
 });
 
+// Public stats endpoint — no auth required
+app.get('/api/v1/stats', async (c) => {
+  const { db: database } = await import('./db/index.js');
+  const { users, projects, tracks } = await import('./db/schema.js');
+  const { sql } = await import('drizzle-orm');
+  const [userCount] = database.select({ count: sql<number>`count(*)` }).from(users).all();
+  const [projectCount] = database.select({ count: sql<number>`count(*)` }).from(projects).all();
+  const [trackCount] = database.select({ count: sql<number>`count(*)` }).from(tracks).all();
+  return c.json({
+    users: userCount.count,
+    projects: projectCount.count,
+    tracks: trackCount.count,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
