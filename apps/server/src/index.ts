@@ -66,6 +66,28 @@ app.use('/assets/*', serveStatic({ root: '../desktop/dist' }));
 app.get('/', serveStatic({ root: './public', path: '/index.html' }));
 app.get('/', serveStatic({ root: '../desktop/dist', path: '/index.html' }));
 
+// One-time DB reset (remove after use)
+app.delete('/api/v1/admin/reset-all', async (c) => {
+  const { db: database } = await import('./db/index.js');
+  const sqlite = (database as any)._.session?.client;
+  if (!sqlite) return c.json({ error: 'no db' }, 500);
+  sqlite.exec('DELETE FROM social_post_reactions');
+  sqlite.exec('DELETE FROM social_post_comments');
+  sqlite.exec('DELETE FROM social_post_likes');
+  sqlite.exec('DELETE FROM social_posts');
+  sqlite.exec('DELETE FROM chat_messages');
+  sqlite.exec('DELETE FROM notifications');
+  sqlite.exec('DELETE FROM invitations');
+  sqlite.exec('DELETE FROM tracks');
+  sqlite.exec('DELETE FROM versions');
+  sqlite.exec('DELETE FROM project_members');
+  sqlite.exec('DELETE FROM projects');
+  sqlite.exec('DELETE FROM follows');
+  sqlite.exec('DELETE FROM auth_sessions');
+  sqlite.exec('DELETE FROM users');
+  return c.json({ success: true, message: 'All data deleted' });
+});
+
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
