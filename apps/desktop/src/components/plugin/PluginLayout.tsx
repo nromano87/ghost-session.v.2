@@ -68,13 +68,13 @@ function ProjectListSidebar({
   return (
     <div className="flex flex-col h-full">
       {/* Ghost Session branding */}
-      <div className="px-4 pt-4 pb-3 flex items-center gap-2.5 border-b border-ghost-border/30 mb-1">
-        <svg width="32" height="32" viewBox="0 0 26 26" fill="none" className="shrink-0">
-          <circle cx="13" cy="13" r="11.5" stroke="#00FFC8" strokeWidth="2" fill="none" />
-          <circle cx="13" cy="13" r="7" stroke="#00FFC8" strokeWidth="2" fill="none" />
+      <div className="px-4 pt-5 pb-4 flex items-center gap-2.5 border-b border-white/[0.06] mb-2">
+        <svg width="28" height="28" viewBox="0 0 26 26" fill="none" className="shrink-0">
+          <circle cx="13" cy="13" r="11.5" stroke="#00FFC8" strokeWidth="1.5" fill="none" opacity="0.8" />
+          <circle cx="13" cy="13" r="7" stroke="#00FFC8" strokeWidth="1.5" fill="none" opacity="0.6" />
           <circle cx="13" cy="13" r="2.5" fill="#00FFC8" />
         </svg>
-        <span className="text-[16px] font-extrabold tracking-[0.15em] uppercase whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #00FFC8, #00B4D8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Ghost Session</span>
+        <span className="text-[15px] font-bold tracking-[0.18em] uppercase whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #00FFC8 0%, #00B4D8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Ghost Session</span>
       </div>
 
       <FriendsPanel friends={friends} />
@@ -90,7 +90,7 @@ function ProjectListSidebar({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${favoritesOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
+              <span className="text-[11px] font-semibold text-ghost-text-muted/70 uppercase tracking-[0.1em]">
                 Favorites
               </span>
             </span>
@@ -101,10 +101,10 @@ function ProjectListSidebar({
                 <button
                   key={p.id}
                   onClick={() => onSelect(p.id)}
-                  className={`w-full text-left px-2 py-1.5 text-[15px] rounded-md transition-colors ${
+                  className={`w-full text-left px-2 py-1.5 text-[13px] rounded-md transition-colors ${
                     selectedId === p.id && !selectedPackId
-                      ? 'bg-ghost-surface-hover text-white font-semibold'
-                      : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
+                      ? 'bg-white/[0.08] text-white font-medium'
+                      : 'text-ghost-text-muted font-normal hover:bg-white/[0.04] hover:text-ghost-text-secondary'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -119,10 +119,10 @@ function ProjectListSidebar({
                 <button
                   key={sp.id}
                   onClick={() => onSelectPack(sp.id)}
-                  className={`w-full text-left px-2 py-1.5 text-[15px] rounded-md transition-colors ${
+                  className={`w-full text-left px-2 py-1.5 text-[13px] rounded-md transition-colors ${
                     selectedPackId === sp.id
-                      ? 'bg-ghost-surface-hover text-white font-semibold'
-                      : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
+                      ? 'bg-white/[0.08] text-white font-medium'
+                      : 'text-ghost-text-muted font-normal hover:bg-white/[0.04] hover:text-ghost-text-secondary'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -152,7 +152,7 @@ function ProjectListSidebar({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${beatsOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
+              <span className="text-[11px] font-semibold text-ghost-text-muted/70 uppercase tracking-[0.1em]">
                 My Beats
               </span>
             </button>
@@ -169,10 +169,10 @@ function ProjectListSidebar({
                 <button
                   key={p.id}
                   onClick={() => { onSelect(p.id); }}
-                  className={`w-full text-left px-2 py-1.5 text-[15px] rounded-md transition-colors ${
+                  className={`w-full text-left px-2 py-1.5 text-[13px] rounded-md transition-colors ${
                     selectedId === p.id && !selectedPackId
-                      ? 'bg-ghost-surface-hover text-white font-semibold'
-                      : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
+                      ? 'bg-white/[0.08] text-white font-medium'
+                      : 'text-ghost-text-muted font-normal hover:bg-white/[0.04] hover:text-ghost-text-secondary'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -200,7 +200,7 @@ function ProjectListSidebar({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${projectsOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
+              <span className="text-[11px] font-semibold text-ghost-text-muted/70 uppercase tracking-[0.1em]">
                 Projects
               </span>
             </span>
@@ -216,10 +216,10 @@ function ProjectListSidebar({
               {projects.map((p) => (
                 <div
                   key={p.id}
-                  className={`group flex items-center w-full px-2 py-1.5 text-[15px] rounded-md transition-colors cursor-pointer ${
+                  className={`group flex items-center w-full px-2 py-1.5 text-[13px] rounded-md transition-colors cursor-pointer ${
                     selectedId === p.id && !selectedPackId
-                      ? 'bg-ghost-surface-hover text-white font-semibold'
-                      : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
+                      ? 'bg-white/[0.08] text-white font-medium'
+                      : 'text-ghost-text-muted font-normal hover:bg-white/[0.04] hover:text-ghost-text-secondary'
                   }`}
                   onClick={() => onSelect(p.id)}
                 >
@@ -254,7 +254,7 @@ function ProjectListSidebar({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${packsOpen ? 'rotate-90' : ''}`}>
                 <polygon points="2,0 8,5 2,10" />
               </svg>
-              <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
+              <span className="text-[11px] font-semibold text-ghost-text-muted/70 uppercase tracking-[0.1em]">
                 Sample Packs
               </span>
             </span>
@@ -274,10 +274,10 @@ function ProjectListSidebar({
                 <div
                   key={sp.id}
                   onClick={() => onSelectPack(sp.id)}
-                  className={`group flex items-center w-full px-2 py-1.5 text-[15px] rounded-md transition-colors cursor-pointer ${
+                  className={`group flex items-center w-full px-2 py-1.5 text-[13px] rounded-md transition-colors cursor-pointer ${
                     selectedPackId === sp.id
-                      ? 'bg-ghost-surface-hover text-white font-semibold'
-                      : 'text-ghost-text-muted font-medium hover:bg-ghost-surface-hover/50 hover:text-ghost-text-secondary'
+                      ? 'bg-white/[0.08] text-white font-medium'
+                      : 'text-ghost-text-muted font-normal hover:bg-white/[0.04] hover:text-ghost-text-secondary'
                   }`}
                 >
                   <span className="flex items-center gap-2 flex-1 min-w-0">
@@ -331,7 +331,7 @@ function FriendsPanel({ friends }: { friends: { id: string; displayName: string;
           <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className={`text-ghost-text-muted transition-transform ${open ? 'rotate-90' : ''}`}>
             <polygon points="2,0 8,5 2,10" />
           </svg>
-          <span className="text-[15px] font-bold text-white uppercase tracking-[0.06em]">
+          <span className="text-[11px] font-semibold text-ghost-text-muted/70 uppercase tracking-[0.1em]">
             Friends — {friends.length}
           </span>
           {onlineFriends.length > 0 && (
@@ -351,7 +351,7 @@ function FriendsPanel({ friends }: { friends: { id: string; displayName: string;
                     <Avatar name={f.displayName} src={f.avatarUrl} size="sm" />
                     <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#23A559] border-[2.5px] border-ghost-surface" />
                   </div>
-                  <span className="text-[15px] font-medium text-ghost-text-secondary group-hover:text-white flex-1 truncate transition-colors">{f.displayName}</span>
+                  <span className="text-[13px] font-medium text-ghost-text-secondary group-hover:text-white flex-1 truncate transition-colors">{f.displayName}</span>
                 </div>
               ))}
               {offlineFriends.map((f) => (
@@ -360,7 +360,7 @@ function FriendsPanel({ friends }: { friends: { id: string; displayName: string;
                     <Avatar name={f.displayName} src={f.avatarUrl} size="sm" />
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-ghost-text-muted/40 border-2 border-ghost-surface" />
                   </div>
-                  <span className="text-[15px] font-medium text-ghost-text-muted/50 group-hover:text-ghost-text-primary flex-1 truncate transition-colors">{f.displayName}</span>
+                  <span className="text-[13px] font-medium text-ghost-text-muted/50 group-hover:text-ghost-text-primary flex-1 truncate transition-colors">{f.displayName}</span>
                 </div>
               ))}
             </>
@@ -928,38 +928,38 @@ function FullMixDropZone({ projectId, onFilesAdded, isBeat }: { projectId: strin
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
-      className={`bg-ghost-surface rounded-lg overflow-hidden transition-colors border-2 border-dashed ${
-        dragOver ? 'border-ghost-green' : 'border-ghost-text-muted/30'
+      className={`bg-ghost-surface/60 rounded-xl overflow-hidden transition-all ${
+        dragOver ? 'border border-ghost-green/60 shadow-[0_0_20px_rgba(0,255,200,0.08)]' : 'border border-ghost-border/40'
       }`}
     >
-      <div className="flex items-center gap-3 px-3 py-2">
-        <button className="w-7 h-7 rounded-full border border-ghost-border flex items-center justify-center text-ghost-text-secondary hover:text-ghost-green hover:border-ghost-green transition-colors">
-          <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12" /></svg>
+      <div className="flex items-center gap-3 px-4 py-2.5">
+        <button className="w-7 h-7 rounded-full bg-ghost-surface-hover/60 flex items-center justify-center text-ghost-text-muted hover:text-ghost-green transition-colors">
+          <svg width="9" height="11" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12" /></svg>
         </button>
-        <span className="text-xs font-bold text-ghost-text-muted uppercase tracking-wider">{isBeat ? 'Beat' : 'Full Mix'}</span>
+        <span className="text-[11px] font-semibold text-ghost-text-muted/80 uppercase tracking-[0.1em]">{isBeat ? 'Beat' : 'Full Mix'}</span>
         <div className="flex-1" />
       </div>
-      <div className={`h-[80px] relative overflow-hidden rounded-b-lg transition-colors ${dragOver ? 'bg-ghost-green/5' : 'bg-ghost-bg'}`}>
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <Waveform seed="fullmix-demo-placeholder" height={80} />
+      <div className={`h-[72px] relative overflow-hidden transition-colors ${dragOver ? 'bg-ghost-green/5' : 'bg-ghost-bg/50'}`}>
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <Waveform seed="fullmix-demo-placeholder" height={72} />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center gap-4 px-6">
+        <div className="absolute inset-0 flex items-center justify-center gap-3 px-5">
           {uploading ? (
-            <span className="text-sm text-ghost-green animate-pulse">{status}</span>
+            <span className="text-[13px] text-ghost-green animate-pulse">{status}</span>
           ) : status ? (
-            <span className="text-sm text-ghost-green">{status}</span>
+            <span className="text-[13px] text-ghost-green">{status}</span>
           ) : (
             <>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={dragOver ? '#00FFC8' : '#ffffff'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={dragOver ? '#00FFC8' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span className={`text-sm font-semibold ${dragOver ? 'text-ghost-green' : 'text-white'}`}>{isBeat ? 'Drop your beat here' : 'Drop your mix here'}</span>
+              <span className={`text-[13px] font-medium ${dragOver ? 'text-ghost-green' : 'text-ghost-text-muted'}`}>{isBeat ? 'Drop your beat here' : 'Drop your mix here'}</span>
               <div className="flex-1" />
               <button
                 onClick={handleBrowse}
-                className="px-3 py-1 text-xs font-semibold bg-ghost-surface-light border border-ghost-text-muted/40 rounded-md text-white hover:text-ghost-green hover:border-ghost-green transition-colors shrink-0"
+                className="px-3 py-1.5 text-[11px] font-semibold bg-white/5 border border-white/10 rounded-lg text-ghost-text-secondary hover:text-white hover:bg-white/10 hover:border-white/20 transition-all shrink-0"
               >
                 + Add File
               </button>
@@ -1547,40 +1547,38 @@ function DropZone({ projectId, onFilesAdded }: { projectId: string; onFilesAdded
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
-      className={`bg-ghost-surface rounded-lg overflow-hidden transition-colors border-2 border-dashed ${
-        dragOver ? 'border-ghost-green' : 'border-ghost-text-muted/30'
+      className={`bg-ghost-surface/60 rounded-xl overflow-hidden transition-all ${
+        dragOver ? 'border border-ghost-green/60 shadow-[0_0_20px_rgba(0,255,200,0.08)]' : 'border border-ghost-border/40'
       }`}
     >
-      <div className="flex items-center gap-3 px-3 py-2">
-        <button className="w-7 h-7 rounded-full border border-ghost-border flex items-center justify-center text-ghost-text-secondary hover:text-ghost-green hover:border-ghost-green transition-colors">
-          <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12" /></svg>
+      <div className="flex items-center gap-3 px-4 py-2.5">
+        <button className="w-7 h-7 rounded-full bg-ghost-surface-hover/60 flex items-center justify-center text-ghost-text-muted hover:text-ghost-green transition-colors">
+          <svg width="9" height="11" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12" /></svg>
         </button>
-        <span className="text-xs font-bold text-ghost-text-muted uppercase tracking-wider">Stems</span>
+        <span className="text-[11px] font-semibold text-ghost-text-muted/80 uppercase tracking-[0.1em]">Stems</span>
         <div className="flex-1" />
       </div>
-      <div className={`h-[80px] relative overflow-hidden rounded-b-lg transition-colors ${dragOver ? 'bg-ghost-green/5' : 'bg-ghost-bg'}`}>
-        {/* Faded demo waveform in background */}
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <Waveform seed="stems-demo-placeholder" height={80} />
+      <div className={`h-[72px] relative overflow-hidden transition-colors ${dragOver ? 'bg-ghost-green/5' : 'bg-ghost-bg/50'}`}>
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <Waveform seed="stems-demo-placeholder" height={72} />
         </div>
-        {/* Content overlay */}
-        <div className="absolute inset-0 flex items-center justify-center gap-4 px-6">
+        <div className="absolute inset-0 flex items-center justify-center gap-3 px-5">
           {uploading ? (
-            <span className="text-sm text-ghost-green animate-pulse">{status}</span>
+            <span className="text-[13px] text-ghost-green animate-pulse">{status}</span>
           ) : status ? (
-            <span className="text-sm text-ghost-green">{status}</span>
+            <span className="text-[13px] text-ghost-green">{status}</span>
           ) : (
             <>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={dragOver ? '#00FFC8' : '#ffffff'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={dragOver ? '#00FFC8' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span className={`text-sm font-semibold ${dragOver ? 'text-ghost-green' : 'text-white'}`}>Drop your stems here</span>
+              <span className={`text-[13px] font-medium ${dragOver ? 'text-ghost-green' : 'text-ghost-text-muted'}`}>Drop your stems here</span>
               <div className="flex-1" />
               <button
                 onClick={handleBrowse}
-                className="px-3 py-1 text-xs font-semibold bg-ghost-surface-light border border-ghost-text-muted/40 rounded-md text-white hover:text-ghost-green hover:border-ghost-green transition-colors shrink-0"
+                className="px-3 py-1.5 text-[11px] font-semibold bg-white/5 border border-white/10 rounded-lg text-ghost-text-secondary hover:text-white hover:bg-white/10 hover:border-white/20 transition-all shrink-0"
               >
                 + Add File
               </button>
@@ -2273,7 +2271,7 @@ export default function PluginLayout() {
                   else if (prev.packId) { setSelectedPackId(prev.packId); }
                 }
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[13px] transition-all whitespace-nowrap shrink-0 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-[0_0_14px_rgba(139,92,246,0.3)] hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold text-[12px] transition-all whitespace-nowrap shrink-0 bg-purple-500/15 text-purple-400 border border-purple-500/20 hover:bg-purple-500/25 hover:border-purple-500/30 active:scale-[0.98]"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill={showSocial ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
@@ -2283,7 +2281,7 @@ export default function PluginLayout() {
             {/* Marketplace button */}
             <button
               onClick={() => { setShowMarketplace(!showMarketplace); if (!showMarketplace) { setShowSocial(false); setSelectedProjectId(null); setSelectedPackId(null); } }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[13px] transition-all whitespace-nowrap shrink-0 bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_14px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold text-[12px] transition-all whitespace-nowrap shrink-0 bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 hover:border-emerald-500/30 active:scale-[0.98]"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
@@ -2440,8 +2438,8 @@ export default function PluginLayout() {
                 {shareStatus && <div className="mb-3 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-[13px] text-purple-300 font-medium text-center">{shareStatus}</div>}
                 {/* Project info bar */}
                 <div className="mb-4">
-                  <div className="flex items-center gap-3 bg-ghost-surface/80 rounded-lg border border-ghost-border/30 px-5 py-3 min-w-0">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00FFC8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <div className="flex items-center gap-3 bg-ghost-surface/50 rounded-xl border border-white/[0.06] px-5 py-3.5 min-w-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00FFC8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-70">
                       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                     </svg>
                     <input
@@ -2598,36 +2596,36 @@ export default function PluginLayout() {
 
                 {/* Collaborators bar */}
                 <div className="mb-4">
-                <div className="flex items-center gap-4 bg-ghost-surface/80 rounded-lg border border-ghost-border/30 px-5 py-3">
-                  <div className="flex items-center -space-x-2.5">
+                <div className="flex items-center gap-4 bg-ghost-surface/50 rounded-xl border border-white/[0.06] px-5 py-3.5">
+                  <div className="flex items-center -space-x-2">
                     {[...members].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any) => (
-                      <div key={m.userId} className="relative group cursor-pointer transition-transform hover:scale-110 hover:z-10" title={m.displayName} style={{ border: '3px solid #0F0F18', borderRadius: '50%' }}>
+                      <div key={m.userId} className="relative group cursor-pointer transition-transform hover:scale-105 hover:z-10" title={m.displayName} style={{ border: '2.5px solid #0A0A0F', borderRadius: '50%' }}>
                         <Avatar name={m.displayName || '?'} src={m.avatarUrl} size="md" />
-                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-ghost-online-green" style={{ border: '2.5px solid #0F0F18' }} />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-ghost-online-green" style={{ border: '2px solid #0A0A0F' }} />
                       </div>
                     ))}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {[...members].filter((m: any) => m.role === 'owner').map((m: any) => (
-                        <span key={m.userId} className="flex items-center gap-1">
-                          <span className="text-[14px] font-bold text-ghost-host-gold">{m.displayName}</span>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-ghost-host-gold/70 bg-ghost-host-gold/10 px-1.5 py-px rounded">host</span>
+                        <span key={m.userId} className="flex items-center gap-1.5">
+                          <span className="text-[13px] font-semibold text-ghost-text-primary">{m.displayName}</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-ghost-host-gold bg-ghost-host-gold/10 px-1.5 py-0.5 rounded">host</span>
                         </span>
                       ))}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-ghost-online-green animate-pulse" />
-                      <span className="text-[14px] text-ghost-text-muted">{members.length} collaborator{members.length !== 1 ? 's' : ''} online</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-ghost-online-green" />
+                      <span className="text-[12px] text-ghost-text-muted">{members.length} collaborator{members.length !== 1 ? 's' : ''} online</span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => { setShowVersionHistory(!showVersionHistory); if (!showVersionHistory && selectedProjectId) fetchVersions(selectedProjectId); }}
-                    className={`shrink-0 px-3 py-1.5 text-[13px] font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
+                    className={`shrink-0 px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
                       showVersionHistory
                         ? 'bg-ghost-purple text-white'
-                        : 'bg-ghost-surface-light border border-ghost-border text-ghost-text-secondary hover:text-white'
+                        : 'bg-white/5 border border-white/10 text-ghost-text-secondary hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2636,13 +2634,13 @@ export default function PluginLayout() {
                     </svg>
                     History
                     {versions.length > 0 && (
-                      <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded-full">{versions.length}</span>
+                      <span className="text-[9px] bg-white/15 px-1.5 py-0.5 rounded-full">{versions.length}</span>
                     )}
                   </button>
 
                   <button
                     onClick={() => setShowInvite(!showInvite)}
-                    className="shrink-0 px-4 py-1.5 text-[14px] font-bold bg-ghost-green text-black rounded-lg hover:bg-ghost-green/85 transition-colors"
+                    className="shrink-0 px-4 py-1.5 text-[13px] font-bold bg-ghost-green text-black rounded-lg hover:bg-ghost-green/90 transition-all hover:shadow-[0_0_16px_rgba(0,255,200,0.2)]"
                   >
                     Invite
                   </button>
@@ -2652,7 +2650,7 @@ export default function PluginLayout() {
 
                 {/* Version History panel */}
                 {showVersionHistory && (
-                  <div className="mb-4 bg-ghost-surface/80 rounded-lg border border-ghost-border/30 overflow-hidden border border-ghost-border/50">
+                  <div className="mb-4 bg-ghost-surface/50 rounded-xl border border-white/[0.06] overflow-hidden">
                     <div className="px-4 py-2 border-b border-ghost-border/30 flex items-center justify-between">
                       <span className="text-[13px] font-bold text-ghost-text-secondary uppercase tracking-wider">Version History</span>
                       <span className="text-[11px] text-ghost-text-muted">{versions.length} snapshot{versions.length !== 1 ? 's' : ''}</span>
