@@ -1426,38 +1426,38 @@ function SamplePackContentView({
           onDragOver={(e) => { e.preventDefault(); setPackDragOver(true); }}
           onDragLeave={() => setPackDragOver(false)}
           onDrop={handlePackDrop}
-          className={`bg-ghost-surface rounded-lg overflow-hidden transition-colors border-2 border-dashed ${
-            packDragOver ? 'border-ghost-green' : 'border-ghost-text-muted/30'
+          className={`bg-ghost-surface/60 rounded-xl overflow-hidden transition-all ${
+            packDragOver ? 'border border-ghost-green/60 shadow-[0_0_20px_rgba(0,255,200,0.08)]' : 'border border-ghost-border/40'
           }`}
         >
-          <div className="flex items-center gap-3 px-3 py-2">
-            <button className="w-7 h-7 rounded-full border border-ghost-border flex items-center justify-center text-ghost-text-secondary hover:text-ghost-green hover:border-ghost-green transition-colors">
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12" /></svg>
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <button className="w-7 h-7 rounded-full bg-ghost-surface-hover/60 flex items-center justify-center text-ghost-text-muted hover:text-ghost-green transition-colors">
+              <svg width="9" height="11" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12" /></svg>
             </button>
-            <span className="text-xs font-bold text-ghost-text-muted uppercase tracking-wider">Samples</span>
+            <span className="text-[11px] font-semibold text-ghost-text-muted/80 uppercase tracking-[0.1em]">Samples</span>
             <div className="flex-1" />
           </div>
-          <div className={`h-[80px] relative overflow-hidden rounded-b-lg transition-colors ${packDragOver ? 'bg-ghost-green/5' : 'bg-ghost-bg'}`}>
-            <div className="absolute inset-0 opacity-15 pointer-events-none">
-              <Waveform seed="samplepack-demo-placeholder" height={80} />
+          <div className={`h-[72px] relative overflow-hidden transition-colors ${packDragOver ? 'bg-ghost-green/5' : 'bg-ghost-bg/50'}`}>
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <Waveform seed="samplepack-demo-placeholder" height={72} />
             </div>
-            <div className="absolute inset-0 flex items-center justify-center gap-4 px-6">
+            <div className="absolute inset-0 flex items-center justify-center gap-3 px-5">
               {packUploading ? (
-                <span className="text-sm text-ghost-green animate-pulse">{packStatus}</span>
+                <span className="text-[13px] text-ghost-green animate-pulse">{packStatus}</span>
               ) : packStatus ? (
-                <span className="text-sm text-ghost-green">{packStatus}</span>
+                <span className="text-[13px] text-ghost-green">{packStatus}</span>
               ) : (
                 <>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={packDragOver ? '#00FFC8' : '#ffffff'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={packDragOver ? '#00FFC8' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  <span className={`text-sm font-semibold ${packDragOver ? 'text-ghost-green' : 'text-white'}`}>Drop your samples here</span>
+                  <span className={`text-[13px] font-medium ${packDragOver ? 'text-ghost-green' : 'text-ghost-text-muted'}`}>Drop your samples here</span>
                   <div className="flex-1" />
                   <button
                     onClick={handlePackBrowse}
-                    className="px-3 py-1 text-xs font-semibold bg-ghost-surface-light border border-ghost-text-muted/40 rounded-md text-white hover:text-ghost-green hover:border-ghost-green transition-colors shrink-0"
+                    className="px-3 py-1.5 text-[11px] font-semibold bg-white/5 border border-white/10 rounded-lg text-ghost-text-secondary hover:text-white hover:bg-white/10 hover:border-white/20 transition-all shrink-0"
                   >
                     + Add File
                   </button>
@@ -1878,7 +1878,7 @@ function SocialFeed({ user, friends }: { user: any; friends: any[] }) {
       <div className="flex-1 overflow-y-auto px-5 pt-2 pb-3">
         {tab === 'feed' && (<>
           <div
-            className={`bg-ghost-surface rounded-xl border-2 border-dashed px-4 py-3 mb-4 transition-colors ${dropDragOver ? 'border-purple-400 bg-purple-500/5' : 'border-ghost-border/30'}`}
+            className={`bg-ghost-surface/60 rounded-xl border px-4 py-3 mb-4 transition-all ${dropDragOver ? 'border-purple-400/60 bg-purple-500/5' : 'border-white/[0.06]'}`}
             onDragOver={(e) => { e.preventDefault(); setDropDragOver(true); }}
             onDragLeave={() => setDropDragOver(false)}
             onDrop={(e) => {
