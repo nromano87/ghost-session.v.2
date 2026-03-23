@@ -945,17 +945,17 @@ function FullMixDropZone({ projectId, onFilesAdded, isBeat }: { projectId: strin
     >
       {/* Aurora glow border */}
       <motion.div
-        className="absolute -inset-px rounded-xl opacity-40 pointer-events-none" style={{ filter: 'blur(0.5px)' }}
+        className="absolute -inset-px rounded-xl opacity-40 pointer-events-none"
         style={{
           background: 'linear-gradient(90deg, #00FFC8, #7C3AED, #EC4899, #F59E0B, #00B4D8, #00FFC8)',
           backgroundSize: '200% 100%',
         }}
         animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
       />
-      <div className={`h-[72px] relative overflow-hidden rounded-xl transition-colors ${dragOver ? 'bg-ghost-green/[0.04]' : 'bg-[#0A0412]'}`}>
+      <div className={`h-[95px] relative overflow-hidden rounded-xl transition-colors ${dragOver ? 'bg-ghost-green/[0.04]' : 'bg-[#0A0412]'}`}>
         <div className="absolute inset-0 opacity-[0.15] pointer-events-none">
-          <Waveform seed="fullmix-demo-placeholder" height={72} />
+          <Waveform seed="fullmix-demo-placeholder" height={95} />
         </div>
         <div className="absolute inset-0 flex items-center justify-center gap-3 px-5">
           {uploading ? (
@@ -1088,27 +1088,29 @@ function StemRow({
       <div className="flex-1 h-full overflow-hidden bg-ghost-bg relative">
         <Waveform seed={name + type} height={72} fileId={fileId} projectId={projectId} showPlayhead trackId={trackId} />
         {/* Play button overlay */}
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10">
-          <button
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+          <motion.button
             onClick={handlePlay}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
               isPlaying
-                ? 'bg-ghost-green/20 text-ghost-green'
+                ? 'bg-purple-600 text-white shadow-[0_0_16px_rgba(124,58,237,0.4)]'
                 : ready
-                  ? 'bg-black/40 text-white hover:text-ghost-green hover:bg-black/60'
-                  : 'bg-black/30 text-ghost-text-muted opacity-40'
+                  ? 'bg-purple-600/80 text-white hover:bg-purple-600 hover:shadow-[0_0_16px_rgba(124,58,237,0.3)]'
+                  : 'bg-white/10 text-ghost-text-muted opacity-40'
             }`}
             disabled={!ready}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
             {isPlaying ? (
-              <svg width="10" height="10" viewBox="0 0 12 14" fill="currentColor">
+              <svg width="12" height="12" viewBox="0 0 12 14" fill="currentColor">
                 <rect x="0" y="0" width="4" height="14" rx="1" />
                 <rect x="8" y="0" width="4" height="14" rx="1" />
               </svg>
             ) : (
-              <svg width="8" height="10" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12" /></svg>
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" className="ml-0.5"><polygon points="0,0 10,6 0,12" /></svg>
             )}
-          </button>
+          </motion.button>
         </div>
         {/* Name overlay */}
         <div className="absolute left-12 top-1 z-10">
@@ -1416,7 +1418,7 @@ function SamplePackContentView({
                       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                     </svg>
                     <input
-                      className="text-[15px] font-bold text-white bg-white/[0.04] border border-white/[0.08] outline-none focus:border-ghost-green/30 px-2 py-1 rounded-md transition-colors min-w-[60px] flex-1 cursor-text"
+                      className="text-[15px] font-bold text-white bg-transparent border border-transparent hover:bg-white/[0.04] hover:border-white/[0.08] focus:bg-white/[0.04] focus:border-ghost-green/30 outline-none px-2 py-1 rounded-md transition-colors min-w-[60px] flex-1 cursor-text"
                       value={projectName}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -2166,6 +2168,10 @@ export default function PluginLayout() {
   const projectMenuRef = useRef<HTMLDivElement>(null);
   const [projectName, setProjectName] = useState('');
   const projectNameTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [projectBpm, setProjectBpm] = useState('');
+  const [projectKey, setProjectKey] = useState('');
+  const bpmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchSamplePacks = async () => {
     try {
@@ -2207,7 +2213,11 @@ export default function PluginLayout() {
 
   // Sync project name local state
   useEffect(() => {
-    if (currentProject) setProjectName(currentProject.name);
+    if (currentProject) {
+      setProjectName(currentProject.name);
+      setProjectBpm(currentProject.tempo ? String(currentProject.tempo) : '');
+      setProjectKey(currentProject.key || '');
+    }
   }, [currentProject?.id, currentProject?.name]);
 
   // Friend search — debounced query against user list
@@ -2468,7 +2478,11 @@ export default function PluginLayout() {
                   else if (prev.packId) { setSelectedPackId(prev.packId); }
                 }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold text-[12px] transition-all whitespace-nowrap shrink-0 bg-purple-500/15 text-purple-400 border border-purple-500/20 hover:bg-purple-500/25 hover:border-purple-500/30 active:scale-[0.98]"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-[13px] transition-all whitespace-nowrap shrink-0 active:scale-[0.98] ${
+                showSocial
+                  ? 'bg-purple-600 text-white shadow-[0_0_16px_rgba(124,58,237,0.3)]'
+                  : 'text-white/60 hover:text-white'
+              }`}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill={showSocial ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
@@ -2478,7 +2492,11 @@ export default function PluginLayout() {
             {/* Marketplace button */}
             <button
               onClick={() => { setShowMarketplace(!showMarketplace); if (!showMarketplace) { setShowSocial(false); setSelectedProjectId(null); setSelectedPackId(null); } }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold text-[12px] transition-all whitespace-nowrap shrink-0 bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 hover:border-emerald-500/30 active:scale-[0.98]"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-[13px] transition-all whitespace-nowrap shrink-0 active:scale-[0.98] ${
+                showMarketplace
+                  ? 'bg-emerald-600 text-white shadow-[0_0_16px_rgba(16,185,129,0.3)]'
+                  : 'text-white/60 hover:text-white'
+              }`}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
@@ -2487,9 +2505,9 @@ export default function PluginLayout() {
               Marketplace
             </button>
             {/* Search bar — always visible */}
-            <div ref={friendSearchRef} className="flex-1 flex items-center gap-2">
+            <div ref={friendSearchRef} className="flex-1 flex items-center gap-2 group/search">
               <div className="relative flex-1">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
@@ -2500,7 +2518,7 @@ export default function PluginLayout() {
                   onFocus={() => setShowFriendSearch(true)}
                   onKeyDown={(e) => { if (e.key === 'Escape') { setShowFriendSearch(false); setFriendSearchQuery(''); (e.target as HTMLInputElement).blur(); } }}
                   placeholder="Search"
-                  className="w-full h-9 pl-9 pr-3 rounded-lg glass-subtle text-[13px] text-white/80 placeholder:text-white/25 focus:outline-none focus:border-white/15 transition-all"
+                  className="w-full h-10 pl-10 pr-4 rounded-xl bg-transparent border border-transparent group-hover/search:border-white/[0.06] focus:border-white/[0.15] focus:bg-white/[0.03] text-[13px] font-semibold text-white/80 placeholder:text-white/60 focus:outline-none transition-all"
                 />
                 {friendSearchQuery.trim() && showFriendSearch && (
                   <div className="absolute left-0 right-0 top-full mt-1 glass rounded-lg shadow-popup z-50 max-h-48 overflow-y-auto">
@@ -2595,16 +2613,16 @@ export default function PluginLayout() {
           {selectedProjectId && currentProject ? (
             <>
               <div className="flex-1 flex flex-col min-w-0 glass glass-glow rounded-2xl overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2">
+              <div className="flex-1 overflow-y-auto px-4 pt-2 pb-2">
                 {shareStatus && <div className="mb-3 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-[13px] text-purple-300 font-medium text-center">{shareStatus}</div>}
                 {/* Project info bar */}
                 <div className="mb-4">
-                  <div className="flex items-center gap-3 glass-subtle px-5 py-3 min-w-0">
+                  <div className="flex items-center gap-3 glass-subtle px-5 py-1 min-w-0">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00FFC8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-60">
                       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                     </svg>
                     <input
-                      className="text-[15px] font-bold text-white bg-white/[0.04] border border-white/[0.08] outline-none focus:border-ghost-green/30 px-2 py-1 rounded-md transition-colors min-w-[60px] flex-1 cursor-text"
+                      className="text-[15px] font-bold text-white bg-transparent border border-transparent hover:bg-white/[0.04] hover:border-white/[0.08] focus:bg-white/[0.04] focus:border-ghost-green/30 outline-none px-2 py-1 rounded-md transition-colors min-w-[60px] flex-1 cursor-text"
                       value={projectName}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -2628,13 +2646,21 @@ export default function PluginLayout() {
                         type="text"
                         inputMode="numeric"
                         maxLength={3}
-                        className="w-12 text-[14px] font-bold text-white bg-white/[0.04] border border-white/[0.08] outline-none focus:border-ghost-green/30 px-1.5 py-1 rounded-md transition-colors text-center cursor-text"
+                        className="w-12 text-[14px] font-bold text-white bg-transparent border border-transparent hover:bg-white/[0.04] hover:border-white/[0.08] focus:bg-white/[0.04] focus:border-ghost-green/30 outline-none px-1.5 py-1 rounded-md transition-colors text-center cursor-text"
                         style={{ fontFamily: "'Consolas', monospace" }}
-                        value={currentProject.tempo || ''}
+                        value={projectBpm}
                         placeholder=""
                         onChange={(e) => {
                           const val = e.target.value.replace(/\D/g, '').slice(0, 3);
-                          if (val) updateProject(currentProject.id, { tempo: parseInt(val) });
+                          setProjectBpm(val);
+                          if (bpmTimer.current) clearTimeout(bpmTimer.current);
+                          bpmTimer.current = setTimeout(() => {
+                            if (val) updateProject(currentProject.id, { tempo: parseInt(val) });
+                          }, 500);
+                        }}
+                        onBlur={() => {
+                          if (bpmTimer.current) clearTimeout(bpmTimer.current);
+                          if (projectBpm) updateProject(currentProject.id, { tempo: parseInt(projectBpm) });
                         }}
                       />
                     </div>
@@ -2643,14 +2669,22 @@ export default function PluginLayout() {
                       <span className="text-[11px] text-ghost-text-muted/60 uppercase tracking-wider">Key</span>
                       <input
                         type="text"
-                        maxLength={2}
-                        className="w-10 text-[14px] font-bold text-white bg-white/[0.04] border border-white/[0.08] outline-none focus:border-ghost-green/30 px-1.5 py-1 rounded-md transition-colors text-center cursor-text"
+                        maxLength={3}
+                        className="w-12 text-[14px] font-bold text-white bg-transparent border border-transparent hover:bg-white/[0.04] hover:border-white/[0.08] focus:bg-white/[0.04] focus:border-ghost-green/30 outline-none px-1.5 py-1 rounded-md transition-colors text-center cursor-text"
                         style={{ fontFamily: "'Consolas', monospace" }}
-                        value={currentProject.key || ''}
+                        value={projectKey}
                         placeholder=""
                         onChange={(e) => {
-                          const val = e.target.value.slice(0, 2);
-                          updateProject(currentProject.id, { key: val });
+                          const val = e.target.value.slice(0, 3);
+                          setProjectKey(val);
+                          if (keyTimer.current) clearTimeout(keyTimer.current);
+                          keyTimer.current = setTimeout(() => {
+                            if (val) updateProject(currentProject.id, { key: val });
+                          }, 500);
+                        }}
+                        onBlur={() => {
+                          if (keyTimer.current) clearTimeout(keyTimer.current);
+                          if (projectKey) updateProject(currentProject.id, { key: projectKey });
                         }}
                       />
                     </div>
@@ -2745,7 +2779,7 @@ export default function PluginLayout() {
 
                 {/* Collaborators bar */}
                 <div className="mb-4">
-                <div className="flex items-center gap-4 glass-subtle px-5 py-3">
+                <div className="flex items-center gap-4 glass-subtle px-5 h-[95px]">
                   <div className="flex items-center -space-x-2">
                     {[...members].sort((a: any, b: any) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0)).map((m: any) => (
                       <div key={m.userId} className="relative group cursor-pointer transition-transform hover:scale-105 hover:z-10" title={m.displayName} style={{ border: '2.5px solid #0A0A0F', borderRadius: '50%' }}>
