@@ -1029,122 +1029,61 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-1.5 mb-2">
-      {/* Your video — full width */}
-      {(() => {
+    <div className="grid grid-cols-2 gap-1.5 mb-2">
+      {/* 4 equal quadrants — 2x2 grid */}
+      {Array.from({ length: 4 }).map((_, i) => {
         const myIndex = members.findIndex(m => m.userId === userId);
         const me = myIndex >= 0 ? members[myIndex] : null;
-        if (!me) return null;
-        const i = 0;
-        const member = me;
-        const isMe = true;
+        // Slot 0 = you, slots 1-3 = other members
+        const isMe = i === 0;
+        const member = isMe ? me : (() => {
+          const otherMembers = members.filter(m => m.userId !== userId);
+          return otherMembers[i - 1] || null;
+        })();
+
+        if (isMe && !me) return null;
+
         return (
-          <div className="relative aspect-video rounded-xl overflow-hidden glass-subtle group/video">
+          <div key={i} className="relative aspect-square rounded-xl overflow-hidden glass-subtle group/video">
             {isMe && cameraOn && (
               <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 w-full h-full object-cover" />
-            )}
-            {!(isMe && cameraOn) && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className={`rounded-full transition-all duration-150 ${isSpeaking && micOn ? 'ring-[3px] ring-green-500 shadow-[0_0_12px_rgba(34,197,94,0.5)]' : ''}`}>
-                    <Avatar name={member.displayName || '?'} src={member.avatarUrl} size="xl" />
-                  </div>
-                  <span className="text-[11px] text-white/50 font-medium">{member.displayName}</span>
-                </div>
-              </div>
             )}
             {isMe && cameraOn && (
               <div className={`absolute inset-0 rounded-xl transition-all duration-150 pointer-events-none ${isSpeaking && micOn ? 'ring-[3px] ring-inset ring-green-500 shadow-[inset_0_0_12px_rgba(34,197,94,0.3)]' : ''}`} />
             )}
-            {isMe && cameraOn && (
-              <span className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[11px] text-white font-medium drop-shadow-lg">{member?.displayName}</span>
-            )}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 opacity-0 group-hover/video:opacity-100 transition-opacity">
-              <motion.button onClick={toggleCamera} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${cameraOn ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
-                title={cameraOn ? 'Turn off camera' : 'Turn on camera'}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
-              </motion.button>
-              <div className="relative" ref={micMenuRef}>
-                <div className="flex items-center gap-0.5">
-                  <motion.button onClick={toggleMic} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${micOn ? 'bg-green-600 text-white' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
-                    title={micOn ? 'Mute mic' : 'Unmute mic'}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
-                  </motion.button>
-                  <motion.button onClick={handleMicClick} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                    className="w-5 h-8 rounded-full flex items-center justify-center bg-white/10 text-white/50 hover:bg-white/20 transition-colors"
-                    title="Select mic input"
-                  >
-                    <svg width="8" height="8" viewBox="0 0 10 6" fill="currentColor"><polygon points="0,0 10,0 5,6" /></svg>
-                  </motion.button>
+            {isMe && !cameraOn && (
+              <div className="absolute inset-0 flex items-center justify-center pb-6">
+                <div className={`rounded-full transition-all duration-150 ${isSpeaking && micOn ? 'ring-[3px] ring-green-500 shadow-[0_0_12px_rgba(34,197,94,0.5)]' : ''}`}>
+                  <Avatar name={me!.displayName || '?'} src={me!.avatarUrl} size="xl" />
                 </div>
-                {showMicMenu && (
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
-                    <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-ghost-text-muted border-b border-white/5">Input Device</div>
-                    {audioDevices.length === 0 && (
-                      <div className="px-3 py-2 text-[12px] text-ghost-text-muted">No devices found</div>
-                    )}
-                    {audioDevices.map(d => (
-                      <button
-                        key={d.deviceId}
-                        onClick={() => selectDevice(d.deviceId)}
-                        className={`w-full text-left px-3 py-2 text-[12px] hover:bg-white/[0.06] transition-colors flex items-center gap-2 ${
-                          selectedDeviceId === d.deviceId ? 'text-ghost-green' : 'text-ghost-text-secondary'
-                        }`}
-                      >
-                        {selectedDeviceId === d.deviceId && (
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                        )}
-                        <span className={selectedDeviceId !== d.deviceId ? 'ml-[18px]' : ''}>{d.label || `Microphone ${d.deviceId.slice(0, 8)}`}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
-            </div>
-            <span className="absolute bottom-1.5 left-2 w-2 h-2 rounded-full bg-ghost-online-green" />
-          </div>
-        );
-      })()}
-      {/* Friend slots — 3 in a row */}
-      <div className="grid grid-cols-3 gap-1.5">
-      {Array.from({ length: 3 }).map((_, i) => {
-        const otherMembers = members.filter(m => m.userId !== userId);
-        const member = otherMembers[i];
-        const isMe = false;
-        return (
-          <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden glass-subtle group/video">
-            {isMe && cameraOn && (
-              <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 w-full h-full object-cover" />
             )}
-            {!(isMe && cameraOn) && (
+            {!isMe && (
               <div className="absolute inset-0 flex items-center justify-center">
                 {member ? (
-                  <div className="flex flex-col items-center gap-1.5">
-                    <Avatar name={member.displayName || '?'} src={member.avatarUrl} size="lg" />
-                    <span className="text-[11px] text-white/50 font-medium">{member.displayName}</span>
-                  </div>
+                  <Avatar name={member.displayName || '?'} src={member.avatarUrl} size="lg" />
                 ) : (
-                  <button onClick={() => { const searchInput = document.querySelector('input[placeholder="Search"]') as HTMLInputElement; if (searchInput) { searchInput.focus(); searchInput.scrollIntoView(); } }} className="flex flex-col items-center gap-2 hover:scale-105 transition-all cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-purple-600/20 border border-purple-500/30 flex items-center justify-center hover:bg-purple-600/30 transition-colors">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-400">
+                  <div className="flex flex-col items-center gap-2">
+                    <motion.button
+                      onClick={() => { const searchInput = document.querySelector('input[placeholder="Search"]') as HTMLInputElement; if (searchInput) { searchInput.focus(); searchInput.scrollIntoView(); } }}
+                      className="w-11 h-11 rounded-full text-white flex items-center justify-center transition-all shadow-[0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_0_20px_rgba(124,58,237,0.4),0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]"
+                      style={{ background: 'linear-gradient(180deg, #7C3AED 0%, #581C87 100%)' }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
                         <line x1="5" y1="12" x2="19" y2="12" />
                       </svg>
-                    </div>
-                    <span className="text-[11px] text-purple-400 font-medium">Add Friend</span>
-                  </button>
+                    </motion.button>
+                    <span className="text-[11px] font-bold text-white/70">Add Friend</span>
+                  </div>
                 )}
               </div>
             )}
-            {isMe && cameraOn && (
-              <span className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[11px] text-white font-medium drop-shadow-lg">{member?.displayName}</span>
-            )}
+            {/* Controls on your tile — aligned with avatar */}
             {isMe && (
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 opacity-0 group-hover/video:opacity-100 transition-opacity">
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-3 transition-opacity">
                 <motion.button onClick={toggleCamera} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${cameraOn ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
                   title={cameraOn ? 'Turn off camera' : 'Turn on camera'}
@@ -1157,13 +1096,22 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
                 </motion.button>
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-white/10 text-white/50 hover:bg-white/20"
+                  title="Screen share"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                  </svg>
+                </motion.button>
               </div>
             )}
-            {member && <span className="absolute bottom-1.5 left-2 w-2 h-2 rounded-full bg-ghost-online-green" />}
+            {isMe && <span className="absolute bottom-1.5 left-2 w-2 h-2 rounded-full bg-ghost-online-green" />}
           </div>
         );
       })}
-      </div>
     </div>
   );
 }
@@ -1307,6 +1255,8 @@ function StemRow({
   const [isPlaying, setIsPlaying] = useState(false);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
+  const isMuted = useAudioStore((s) => s.loadedTracks.get(trackId)?.muted ?? false);
+  const setTrackMuted = useAudioStore((s) => s.setTrackMuted);
 
   const downloadUrl = fileId && projectId ? api.getDirectDownloadUrl(projectId, fileId) : null;
 
@@ -1398,8 +1348,8 @@ function StemRow({
         <Waveform seed={name + type} height={95} fileId={fileId} projectId={projectId} showPlayhead trackId={trackId} />
         {/* Left gradient for text readability */}
         <div className="absolute inset-y-0 left-0 w-[45%] pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(10,4,18,0.85) 0%, rgba(10,4,18,0.4) 60%, transparent 100%)' }} />
-        {/* Play button overlay */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Play + Mute buttons overlay */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
           <motion.button
             onClick={handlePlay}
             className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
@@ -1423,9 +1373,31 @@ function StemRow({
               <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" className="ml-0.5"><polygon points="0,0 10,6 0,12" /></svg>
             )}
           </motion.button>
+          <motion.button
+            onClick={() => setTrackMuted(trackId, !isMuted)}
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_0_20px_rgba(124,58,237,0.4),0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]`}
+            style={{ background: isMuted ? 'linear-gradient(180deg, #DC2626 0%, #991B1B 100%)' : 'linear-gradient(180deg, #7C3AED 0%, #581C87 100%)' }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            title={isMuted ? 'Unmute' : 'Mute'}
+          >
+            {isMuted ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            )}
+          </motion.button>
         </div>
         {/* Name overlay */}
-        <div className="absolute left-16 top-2 z-10 max-w-[50%]">
+        <div className="absolute left-[120px] top-2 z-10 max-w-[40%]">
           {editing ? (
             <input
               autoFocus
@@ -1454,7 +1426,7 @@ function StemRow({
         </div>
         {/* Time overlay */}
         {createdAt && (
-          <div className="absolute left-16 bottom-2 z-10">
+          <div className="absolute left-[120px] bottom-2 z-10">
             <p className="text-[11px] text-ghost-green font-medium" title={new Date(createdAt).toLocaleString()}>
               {formatDate(createdAt)}
             </p>
@@ -1512,13 +1484,39 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-function TransportBar({ tracks, projectId }: { tracks?: any[]; projectId?: string }) {
-  const { isPlaying, currentTime, duration, loadedTracks, play, pause, stop, seekTo, loadTrack } = useAudioStore();
+// Parse BPM from a filename like "KMRBI_RHS6_140_synth_chords" → 140
+function detectBpmFromName(name: string): number {
+  // Look for common BPM patterns: _140_, -140-, _140bpm, 140BPM, etc.
+  const patterns = [
+    /[_\-\s](\d{2,3})\s*bpm/i,        // _140bpm, _140 bpm
+    /bpm\s*[_\-\s]*(\d{2,3})/i,        // bpm140, bpm_140
+    /[_\-](\d{2,3})[_\-]/,             // _140_ or -140-
+    /^(\d{2,3})[_\-]/,                 // 140_ at start
+  ];
+  for (const pat of patterns) {
+    const match = name.match(pat);
+    if (match) {
+      const val = parseInt(match[1]);
+      if (val >= 60 && val <= 250) return val;
+    }
+  }
+  return 0;
+}
+
+function TransportBar({ tracks, projectId, projectTempo, onTempoChange }: { tracks?: any[]; projectId?: string; projectTempo?: number; onTempoChange?: (bpm: number) => void }) {
+  const { isPlaying, currentTime, duration, loadedTracks, projectBpm, play, pause, stop, seekTo, loadTrack, setProjectBpm } = useAudioStore();
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const [dragging, setDragging] = useState(false);
   const seekBarRef = useRef<HTMLDivElement>(null);
   const loadedRef = useRef<Set<string>>(new Set());
+
+  // Sync project BPM to audio store
+  useEffect(() => {
+    if (projectTempo && projectTempo > 0) {
+      setProjectBpm(projectTempo);
+    }
+  }, [projectTempo, setProjectBpm]);
 
   // Auto-load tracks into the audio store when their buffers become available
   useEffect(() => {
@@ -1528,7 +1526,9 @@ function TransportBar({ tracks, projectId }: { tracks?: any[]; projectId?: strin
         if (!track.fileId || loadedRef.current.has(track.id)) continue;
         if (audioBufferCache.has(track.fileId)) {
           loadedRef.current.add(track.id);
-          loadTrack(track.id, track.fileId, projectId);
+          const trackName = track.name || track.fileName || '';
+          const detectedBpm = detectBpmFromName(trackName);
+          loadTrack(track.id, track.fileId, projectId, detectedBpm);
         }
       }
     };
@@ -1641,6 +1641,40 @@ function TransportBar({ tracks, projectId }: { tracks?: any[]; projectId?: strin
             <path d="M21 13v2a4 4 0 0 1-4 4H3" />
           </svg>
         </button>
+
+        {/* BPM controls */}
+        {projectBpm > 0 && (
+          <div className="flex items-center gap-1 ml-3 pl-3 border-l border-white/10">
+            <motion.button
+              onClick={() => {
+                const newBpm = Math.max(40, projectBpm - 1);
+                setProjectBpm(newBpm);
+                onTempoChange?.(newBpm);
+              }}
+              className="w-6 h-6 rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white flex items-center justify-center transition-colors text-[14px] font-bold"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Decrease BPM"
+            >
+              −
+            </motion.button>
+            <span className="text-[13px] font-mono font-bold text-white/70 w-10 text-center select-none">{projectBpm}</span>
+            <motion.button
+              onClick={() => {
+                const newBpm = Math.min(300, projectBpm + 1);
+                setProjectBpm(newBpm);
+                onTempoChange?.(newBpm);
+              }}
+              className="w-6 h-6 rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white flex items-center justify-center transition-colors text-[14px] font-bold"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Increase BPM"
+            >
+              +
+            </motion.button>
+            <span className="text-[9px] text-white/30 uppercase tracking-wider ml-0.5">BPM</span>
+          </div>
+        )}
       </div>
 
       {/* Seek bar row */}
@@ -3260,7 +3294,7 @@ export default function PluginLayout() {
                     </div>
                   ))}
                 </div>
-                <TransportBar tracks={currentProject.tracks} projectId={selectedProjectId!} />
+                <TransportBar tracks={currentProject.tracks} projectId={selectedProjectId!} projectTempo={currentProject.tempo} onTempoChange={(bpm) => updateProject(selectedProjectId!, { tempo: bpm })} />
               </div>
 
               </div>
@@ -3286,10 +3320,10 @@ export default function PluginLayout() {
                     <div className="px-3 py-3 border-b border-white/[0.06] shrink-0">
                       {(() => {
                         const displayFriends = friends.length > 0 ? friends : [
-                          { id: 'demo1', displayName: 'Alex Beats', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=b6e3f4' },
-                          { id: 'demo2', displayName: 'Jay Producer', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jay&backgroundColor=c0aede' },
-                          { id: 'demo3', displayName: 'Kira Wave', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kira&backgroundColor=ffd5dc' },
-                          { id: 'demo4', displayName: 'Rio Sound', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rio&backgroundColor=d1f4d1' },
+                          { id: 'demo1', displayName: 'Alex Beats', avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg' },
+                          { id: 'demo2', displayName: 'Jay Producer', avatarUrl: 'https://randomuser.me/api/portraits/men/75.jpg' },
+                          { id: 'demo3', displayName: 'Kira Wave', avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg' },
+                          { id: 'demo4', displayName: 'Rio Sound', avatarUrl: 'https://randomuser.me/api/portraits/men/85.jpg' },
                         ];
                         return (
                           <div className="flex items-center justify-evenly w-full">
@@ -3343,10 +3377,10 @@ export default function PluginLayout() {
                     <div className="px-3 py-3 border-b border-white/[0.06] shrink-0">
                       {(() => {
                         const displayFriends = friends.length > 0 ? friends : [
-                          { id: 'demo1', displayName: 'Alex Beats', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=b6e3f4' },
-                          { id: 'demo2', displayName: 'Jay Producer', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jay&backgroundColor=c0aede' },
-                          { id: 'demo3', displayName: 'Kira Wave', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kira&backgroundColor=ffd5dc' },
-                          { id: 'demo4', displayName: 'Rio Sound', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rio&backgroundColor=d1f4d1' },
+                          { id: 'demo1', displayName: 'Alex Beats', avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg' },
+                          { id: 'demo2', displayName: 'Jay Producer', avatarUrl: 'https://randomuser.me/api/portraits/men/75.jpg' },
+                          { id: 'demo3', displayName: 'Kira Wave', avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg' },
+                          { id: 'demo4', displayName: 'Rio Sound', avatarUrl: 'https://randomuser.me/api/portraits/men/85.jpg' },
                         ];
                         return (
                           <div className="flex items-center justify-evenly w-full">
