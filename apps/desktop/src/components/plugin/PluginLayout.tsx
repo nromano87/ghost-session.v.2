@@ -3054,7 +3054,24 @@ export default function PluginLayout() {
   return (
     <div className="flex h-screen w-screen overflow-hidden relative p-2 gap-2">
       {/* Presence dock — far left */}
-      <div className="flex flex-col items-center gap-4 py-2 shrink-0 w-12">
+      <div className="flex flex-col items-center shrink-0 w-11 py-2 z-20">
+        {/* Add friend button */}
+        <motion.button
+          onClick={() => { setShowFriendSearch(!showFriendSearch); setFriendSearchQuery(''); }}
+          className="w-9 h-9 rounded-full text-white flex items-center justify-center transition-all mb-3 shadow-[0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_0_16px_rgba(124,58,237,0.4),0_2px_8px_rgba(0,0,0,0.3)]"
+          style={{ background: 'linear-gradient(180deg, #7C3AED 0%, #581C87 100%)' }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          title="Add Friend"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </motion.button>
+        <div className="w-6 h-px bg-white/10 mb-3" />
+        {/* Friends list */}
+        <div className="flex flex-col items-center gap-4">
         {(() => {
           const displayFriends = friends.length > 0 ? friends : [
             { id: 'demo1', displayName: 'Alex Beats', avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg' },
@@ -3071,7 +3088,7 @@ export default function PluginLayout() {
             <div key={f.id} className="relative group cursor-pointer hover:scale-110 transition-transform"
               onClick={() => { if (projectId) selectProject(projectId); }}
             >
-              <div className={`w-10 h-10 rounded-full ring-2 transition-all overflow-hidden ${isOnline ? 'ring-white/[0.08] group-hover:ring-ghost-green/40' : 'ring-white/[0.04] opacity-50'}`}>
+              <div className={`rounded-full transition-all overflow-hidden ${isOnline ? 'group-hover:ring-2 group-hover:ring-ghost-green/40' : ''}`}>
                 <Avatar name={f.displayName} src={f.avatarUrl} size="md" />
               </div>
               {isOnline && <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-ghost-online-green border-2 border-[#0A0412]" />}
@@ -3090,6 +3107,7 @@ export default function PluginLayout() {
             </div>
           );});
         })()}
+        </div>
       </div>
 
       {/* Left sidebar */}
@@ -3156,7 +3174,7 @@ export default function PluginLayout() {
               Marketplace
             </button>
             {/* Search bar — always visible */}
-            <div ref={friendSearchRef} className="flex-1 flex items-center gap-2 group/search">
+            <div ref={friendSearchRef} className="flex-1 flex items-center gap-2 group/search relative z-[100]">
               <div className="relative flex-1">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none">
                   <circle cx="11" cy="11" r="8" />
@@ -3172,7 +3190,7 @@ export default function PluginLayout() {
                   className="w-full h-10 pl-10 pr-4 rounded-xl bg-transparent border border-transparent group-hover/search:border-white/[0.06] focus:border-white/[0.15] focus:bg-white/[0.03] text-[13px] font-semibold text-white/80 placeholder:text-white/60 focus:outline-none transition-all"
                 />
                 {friendSearchQuery.trim() && showFriendSearch && (
-                  <div className="absolute left-0 right-0 top-full mt-1 glass rounded-lg shadow-popup z-50 max-h-48 overflow-y-auto">
+                  <div className="absolute left-0 right-0 top-full mt-1 glass rounded-lg shadow-popup z-[9999] max-h-48 overflow-y-auto">
                     {friendSearchResults.length === 0 ? (
                       <p className="px-3 py-2.5 text-[13px] text-ghost-text-muted">No users found</p>
                     ) : (
