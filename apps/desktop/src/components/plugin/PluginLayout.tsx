@@ -76,31 +76,6 @@ function ProjectListSidebar({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Ghost Session branding */}
-      <div className="px-3 h-14 flex items-center gap-2 shrink-0">
-        <span className="text-[15px] font-bold tracking-[0.12em] uppercase whitespace-nowrap flex items-center justify-center gap-1.5 w-full" style={{ background: 'linear-gradient(135deg, #00FFC8 0%, #7C3AED 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Ghost
-          <motion.svg
-            width="26" height="28" viewBox="0 0 20 22" fill="none" className="shrink-0"
-            style={{ WebkitTextFillColor: 'initial', filter: 'drop-shadow(0 0 4px rgba(0,255,200,0.3))' }}
-            animate={{ y: [0, -2, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <defs>
-              <linearGradient id="ghostGrad" x1="0" y1="0" x2="20" y2="22" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#00FFC8" />
-                <stop offset="100%" stopColor="#7C3AED" />
-              </linearGradient>
-            </defs>
-            <path d="M10 1C5.5 1 2 4.5 2 9v8l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V9c0-4.5-3.5-8-8-8z" fill="rgba(0,255,200,0.08)" stroke="url(#ghostGrad)" strokeWidth="1.5" strokeLinejoin="round" />
-            <ellipse cx="7.5" cy="9.5" rx="1.6" ry="1.8" fill="url(#ghostGrad)" opacity="0.9" />
-            <ellipse cx="12.5" cy="9.5" rx="1.6" ry="1.8" fill="url(#ghostGrad)" opacity="0.9" />
-            <ellipse cx="7.5" cy="9.2" rx="0.6" ry="0.7" fill="#0A0412" />
-            <ellipse cx="12.5" cy="9.2" rx="0.6" ry="0.7" fill="#0A0412" />
-          </motion.svg>
-          Session
-        </span>
-      </div>
 
       <Reorder.Group axis="y" values={sectionOrder} onReorder={(newOrder) => { setSectionOrder(newOrder); localStorage.setItem('ghost_sidebar_order', JSON.stringify(newOrder)); }} className="flex-1 overflow-y-auto min-h-0" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {sectionOrder.map((sectionKey) => {
@@ -1283,7 +1258,7 @@ function VideoGrid({ members, userId, onAddFriend }: { members: any[]; userId?: 
   );
 }
 
-function FullMixDropZone({ projectId, onFilesAdded, isBeat }: { projectId: string; onFilesAdded: () => void; isBeat?: boolean }) {
+function FullMixDropZone({ projectId, onFilesAdded, isBeat, compact }: { projectId: string; onFilesAdded: () => void; isBeat?: boolean; compact?: boolean }) {
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState('');
@@ -1351,7 +1326,7 @@ function FullMixDropZone({ projectId, onFilesAdded, isBeat }: { projectId: strin
         animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
       />
-      <div className={`h-[95px] relative overflow-hidden rounded-xl transition-colors backdrop-blur-md ${dragOver ? 'bg-white/[0.06]' : 'bg-white/[0.03]'}`} style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.2)' }}>
+      <div className={`${compact ? 'h-[48px]' : 'h-[95px]'} relative overflow-hidden rounded-xl transition-all backdrop-blur-md ${dragOver ? 'bg-white/[0.06]' : 'bg-white/[0.03]'}`} style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.2)' }}>
         {/* Glass gloss overlay */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 40%, rgba(0,0,0,0.08) 100%)' }} />
         <div className="absolute inset-0 opacity-[0.15] pointer-events-none">
@@ -1409,7 +1384,7 @@ function formatDate(dateStr?: string | null): string {
 }
 
 function StemRow({
-  name, type, onDelete, onRename, fileId, projectId, trackId, createdAt, compact,
+  name, type, onDelete, onRename, fileId, projectId, trackId, createdAt, compact, widthPercent,
 }: {
   name: string; type: string;
   onDelete: () => void;
@@ -1417,6 +1392,7 @@ function StemRow({
   fileId?: string | null; projectId?: string; trackId: string;
   createdAt?: string | null;
   compact?: boolean;
+  widthPercent?: number;
 }) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
@@ -1525,6 +1501,7 @@ function StemRow({
       draggable={!!fileId}
       onDragStart={handleDragStart}
       className={`group relative flex items-center rounded-xl overflow-hidden ${compact ? 'h-[48px]' : 'h-[95px]'} ${fileId ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      style={widthPercent !== undefined && widthPercent < 100 ? { width: `${widthPercent}%` } : undefined}
     >
       {/* Waveform full width with overlay controls */}
       <div className="flex-1 h-full overflow-hidden bg-[#0A0412] relative">
@@ -1580,7 +1557,7 @@ function StemRow({
           </motion.button>
         </div>
         {/* Name overlay */}
-        <div className="absolute left-[120px] top-2 z-10 max-w-[40%]">
+        <div className="absolute left-3 top-2 z-10 max-w-[40%]">
           {editing ? (
             <input
               autoFocus
@@ -1609,7 +1586,7 @@ function StemRow({
         </div>
         {/* Time overlay */}
         {createdAt && (
-          <div className="absolute left-[120px] bottom-2 z-10">
+          <div className="absolute left-3 bottom-2 z-10">
             <p className="text-[11px] text-ghost-green font-medium" title={new Date(createdAt).toLocaleString()}>
               {formatDate(createdAt)}
             </p>
@@ -1751,100 +1728,35 @@ function TransportBar({ tracks, projectId, projectTempo, onTempoChange, trackZoo
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="shrink-0 h-[95px] glass glass-glow rounded-xl flex flex-col justify-center">
-      {/* Controls row */}
-      <div className="flex items-center justify-center py-1.5 relative">
-        <div className="flex items-center gap-4">
-        {/* Rewind to start */}
-        <button
-          onClick={() => seekTo(0)}
-          className="w-7 h-7 flex items-center justify-center text-white/50 hover:text-white transition-colors"
-          title="Rewind to start"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="3" y="5" width="3" height="14" rx="1" />
-            <polygon points="21,5 10,12 21,19" />
-          </svg>
-        </button>
+    <div className="shrink-0 h-11 flex items-center justify-between px-3 glass-subtle rounded-lg" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Left: time */}
+      <span className="text-[11px] font-mono text-white/50 w-16 shrink-0">{formatTime(currentTime)}</span>
 
-        {/* Stop */}
-        <button
-          onClick={stop}
-          className="w-7 h-7 flex items-center justify-center text-white/50 hover:text-white transition-colors"
-          title="Stop"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-            <rect x="0" y="0" width="14" height="14" rx="2" />
-          </svg>
+      {/* Center: transport controls */}
+      <div className="flex items-center gap-1">
+        <button onClick={() => seekTo(0)} className="w-8 h-8 flex items-center justify-center rounded-md text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors" title="Rewind">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="6" width="3" height="12" rx="1" /><polygon points="20,6 11,12 20,18" /></svg>
         </button>
-
-        {/* Play/Pause */}
-        <motion.button
-          onClick={handlePlayPause}
-          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
-            isPlaying
-              ? 'text-black shadow-[0_0_16px_rgba(124,58,237,0.4)]'
-              : 'text-black hover:shadow-[0_0_16px_rgba(124,58,237,0.3)]'
-          }`}
-          style={{ background: 'linear-gradient(180deg, #7C3AED 0%, #581C87 100%)' }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
+        <button onClick={handlePlayPause} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isPlaying ? 'text-white' : 'text-white/80 hover:text-white'}`} style={{ background: 'linear-gradient(180deg, #7C3AED 0%, #581C87 100%)' }} title={isPlaying ? 'Pause' : 'Play'}>
           {isPlaying ? (
-            <svg width="14" height="14" viewBox="0 0 12 14" fill="white">
-              <rect x="0" y="0" width="4" height="14" rx="1" />
-              <rect x="8" y="0" width="4" height="14" rx="1" />
-            </svg>
+            <svg width="12" height="12" viewBox="0 0 12 14" fill="white"><rect x="0" y="0" width="4" height="14" rx="1" /><rect x="8" y="0" width="4" height="14" rx="1" /></svg>
           ) : (
-            <svg width="14" height="14" viewBox="0 0 10 12" fill="white" className="ml-0.5"><polygon points="0,0 10,6 0,12" /></svg>
+            <svg width="12" height="12" viewBox="0 0 10 12" fill="white" className="ml-0.5"><polygon points="0,0 10,6 0,12" /></svg>
           )}
-        </motion.button>
-
-        {/* Loop */}
-        <button
-          onClick={() => setLoop(!loop)}
-          className={`w-7 h-7 flex items-center justify-center transition-colors ${loop ? 'text-ghost-green' : 'text-white/40 hover:text-white/70'}`}
-          title={loop ? 'Loop on' : 'Loop off'}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="17 1 21 5 17 9" />
-            <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-            <polyline points="7 23 3 19 7 15" />
-            <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-          </svg>
         </button>
-
-        {/* Metronome */}
-        <button
-          onClick={() => setMetronome(!metronome)}
-          className={`w-7 h-7 flex items-center justify-center transition-colors ${metronome ? 'text-ghost-green' : 'text-white/40 hover:text-white/70'}`}
-          title={metronome ? 'Metronome on' : 'Metronome off'}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L8 22h8L12 2z" />
-            <line x1="12" y1="8" x2="18" y2="4" />
-          </svg>
+        <button className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white/[0.06] transition-colors" title="Record">
+          <svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#e53e3e" /></svg>
         </button>
-        </div>
       </div>
 
-      {/* Seek bar row */}
-      <div className="flex items-center gap-2 px-4 pb-1">
-        <span className="text-[11px] font-mono text-white/40 w-11 text-right shrink-0">{formatTime(currentTime)}</span>
-        <div
-          ref={seekBarRef}
-          className="flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer group relative"
-          onClick={handleSeekClick}
-          onMouseDown={() => setDragging(true)}
-          onMouseMove={handleSeekDrag}
-          onMouseUp={() => setDragging(false)}
-          onMouseLeave={() => setDragging(false)}
-        >
-          <div className="h-full rounded-full relative" style={{ width: `${Math.min(progress, 100)}%`, background: 'linear-gradient(90deg, #7C3AED, #a855f7)' }}>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md" />
-          </div>
-        </div>
-        <span className="text-[11px] font-mono text-white/40 w-11 shrink-0">{formatTime(duration)}</span>
+      {/* Right: track size */}
+      <div className="flex items-center gap-1 w-16 justify-end shrink-0">
+        <button onClick={() => onZoomChange?.('half')} className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${trackZoom === 'half' ? 'text-ghost-green bg-white/[0.08]' : 'text-white/30 hover:text-white/60 hover:bg-white/[0.06]'}`} title="Compact">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
+        </button>
+        <button onClick={() => onZoomChange?.('full')} className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${trackZoom === 'full' ? 'text-ghost-green bg-white/[0.08]' : 'text-white/30 hover:text-white/60 hover:bg-white/[0.06]'}`} title="Full">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
+        </button>
       </div>
     </div>
   );
@@ -2716,13 +2628,48 @@ function SocialFeed({ user, friends }: { user: any; friends: any[] }) {
   );
 }
 
+function ArrangementDropZone({ projectId, onFilesAdded, children }: { projectId: string; onFilesAdded: () => void; children: React.ReactNode }) {
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const droppedFiles = Array.from(e.dataTransfer.files).filter((f) =>
+      f.type.startsWith('audio/') || f.name.match(/\.(wav|mp3|flac|aiff|ogg|m4a|aac)$/i)
+    );
+    if (droppedFiles.length === 0) return;
+    for (const file of droppedFiles) {
+      const { fileId } = await api.uploadFile(projectId, file);
+      const trackName = file.name.replace(/\.[^.]+$/, '');
+      await api.addTrack(projectId, { name: trackName, type: 'fullmix', fileId, fileName: file.name } as any);
+    }
+    onFilesAdded();
+  };
+
+  return (
+    <div
+      className={`relative transition-all ${dragOver ? 'ring-2 ring-ghost-green/50 ring-inset' : ''}`}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+    >
+      {children}
+      {dragOver && (
+        <div className="absolute inset-0 bg-ghost-green/5 pointer-events-none z-30 flex items-center justify-center rounded-xl">
+          <span className="text-ghost-green text-[14px] font-bold uppercase tracking-wider">Drop audio files here</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BarRuler() {
   const { duration, projectBpm, seekTo } = useAudioStore();
   const rulerRef = useRef<HTMLDivElement>(null);
 
   const bpm = projectBpm > 0 ? projectBpm : 120;
   const secondsPerBar = (60 / bpm) * 4;
-  const totalBars = duration > 0 ? Math.ceil(duration / secondsPerBar) : 8;
+  const totalBars = duration > 0 ? Math.max(8, Math.ceil(duration / secondsPerBar)) : 8;
 
   const handleClick = (e: React.MouseEvent) => {
     if (!rulerRef.current || duration <= 0) return;
@@ -2755,7 +2702,7 @@ function BarGridOverlay() {
   const { duration, projectBpm } = useAudioStore();
   const bpm = projectBpm > 0 ? projectBpm : 120;
   const secondsPerBar = (60 / bpm) * 4;
-  const totalBars = duration > 0 ? Math.ceil(duration / secondsPerBar) : 0;
+  const totalBars = duration > 0 ? Math.max(8, Math.ceil(duration / secondsPerBar)) : 8;
 
   if (totalBars === 0) return null;
 
@@ -3227,6 +3174,26 @@ export default function PluginLayout() {
     <div className="flex h-screen w-screen overflow-hidden relative p-2 gap-2">
       {/* Presence dock — far left */}
       <div className="flex flex-col items-center shrink-0 w-11 py-2 z-20">
+        {/* Ghost icon */}
+        <motion.svg
+          width="36" height="38" viewBox="0 0 20 22" fill="none" className="shrink-0 mb-3 cursor-pointer"
+          style={{ filter: 'drop-shadow(0 0 4px rgba(0,255,200,0.3))' }}
+          animate={{ y: [0, -2, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <defs>
+            <linearGradient id="ghostGrad" x1="0" y1="0" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#00FFC8" />
+              <stop offset="100%" stopColor="#7C3AED" />
+            </linearGradient>
+          </defs>
+          <path d="M10 1C5.5 1 2 4.5 2 9v8l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V9c0-4.5-3.5-8-8-8z" fill="rgba(0,255,200,0.08)" stroke="url(#ghostGrad)" strokeWidth="1.5" strokeLinejoin="round" />
+          <ellipse cx="7.5" cy="9.5" rx="1.6" ry="1.8" fill="url(#ghostGrad)" opacity="0.9" />
+          <ellipse cx="12.5" cy="9.5" rx="1.6" ry="1.8" fill="url(#ghostGrad)" opacity="0.9" />
+          <ellipse cx="7.5" cy="9.2" rx="0.6" ry="0.7" fill="#0A0412" />
+          <ellipse cx="12.5" cy="9.2" rx="0.6" ry="0.7" fill="#0A0412" />
+        </motion.svg>
+        <div className="w-6 h-px bg-white/10 mb-3" />
         {/* Add friend button */}
         <motion.button
           onClick={() => { setShowFriendSearch(!showFriendSearch); setFriendSearchQuery(''); }}
@@ -3647,59 +3614,43 @@ export default function PluginLayout() {
                 </div>
                 </div>
 
-                {/* Always one drop zone at top */}
-                <FullMixDropZone projectId={selectedProjectId!} onFilesAdded={() => fetchProject(selectedProjectId!)} isBeat={isBeatView} />
-
-                {/* Track zoom + track list */}
-                <div className="flex items-center justify-end gap-1.5 mt-2 mb-1">
-                  <span className="text-[10px] text-white/30 uppercase tracking-wider mr-1">Track Size</span>
-                  <button
-                    onClick={() => setTrackZoom('half')}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${trackZoom === 'half' ? 'text-ghost-green bg-ghost-green/10 border border-ghost-green/20' : 'text-white/40 hover:text-white/70 bg-white/[0.04] border border-white/10'}`}
-                    title="Compact tracks"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setTrackZoom('full')}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${trackZoom === 'full' ? 'text-ghost-green bg-ghost-green/10 border border-ghost-green/20' : 'text-white/40 hover:text-white/70 bg-white/[0.04] border border-white/10'}`}
-                    title="Full tracks"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
-                    </svg>
-                  </button>
-                </div>
-                {/* Arrangement view */}
-                <div className="relative">
+                {/* Transport bar */}
+                <TransportBar tracks={currentProject.tracks} projectId={selectedProjectId!} projectTempo={currentProject.tempo} onTempoChange={(bpm) => updateProject(selectedProjectId!, { tempo: bpm })} trackZoom={trackZoom} onZoomChange={setTrackZoom} />
+                {/* Drop zone */}
+                <FullMixDropZone projectId={selectedProjectId!} onFilesAdded={() => fetchProject(selectedProjectId!)} isBeat={isBeatView} compact={trackZoom === 'half'} />
+                {/* Arrangement view — drop zone enabled */}
+                <ArrangementDropZone projectId={selectedProjectId!} onFilesAdded={() => fetchProject(selectedProjectId!)}>
                   <BarRuler />
                   <div className="relative space-y-1">
-                    {[...currentProject.tracks].reverse().map((track: any) => (
-                      <StemRow
-                        key={track.id}
-                        trackId={track.id}
-                        name={track.name || track.fileName || 'Track'}
-                        type={track.type || 'audio'}
-                        fileId={track.fileId}
-                        projectId={selectedProjectId!}
-                        createdAt={track.createdAt}
-                        onDelete={() => deleteTrack(selectedProjectId!, track.id)}
-                        onRename={(newName) => updateTrack(selectedProjectId!, track.id, { name: newName })}
-                        compact={trackZoom === 'half'}
-                      />
-                    ))}
-                    {/* Bar grid lines through tracks */}
+                    {(() => {
+                      const loadedTracks = useAudioStore.getState().loadedTracks;
+                      const maxDur = useAudioStore.getState().duration;
+                      return [...currentProject.tracks].reverse().map((track: any) => {
+                        const loaded = loadedTracks.get(track.id);
+                        const trackDur = loaded?.buffer?.duration || 0;
+                        const widthPct = maxDur > 0 && trackDur > 0 ? (trackDur / maxDur) * 100 : 100;
+                        return (
+                          <StemRow
+                            key={track.id}
+                            trackId={track.id}
+                            name={track.name || track.fileName || 'Track'}
+                            type={track.type || 'audio'}
+                            fileId={track.fileId}
+                            projectId={selectedProjectId!}
+                            createdAt={track.createdAt}
+                            onDelete={() => { useAudioStore.getState().removeTrack(track.id); deleteTrack(selectedProjectId!, track.id); }}
+                            onRename={(newName) => updateTrack(selectedProjectId!, track.id, { name: newName })}
+                            compact={trackZoom === 'half'}
+                            widthPercent={widthPct}
+                          />
+                        );
+                      });
+                    })()}
                     <BarGridOverlay />
                   </div>
                   <ArrangementPlayhead />
-                </div>
+                </ArrangementDropZone>
               </div>
-              </div>
-              {/* Transport bar — fixed at bottom, outside scroll */}
-              <div className="shrink-0 px-4 pb-3">
-                <TransportBar tracks={currentProject.tracks} projectId={selectedProjectId!} projectTempo={currentProject.tempo} onTempoChange={(bpm) => updateProject(selectedProjectId!, { tempo: bpm })} trackZoom={trackZoom} onZoomChange={setTrackZoom} />
               </div>
               </div>
 

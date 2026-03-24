@@ -38,6 +38,7 @@ interface AudioState {
   stopSoloTrack: () => void;
   setTrackVolume: (trackId: string, volume: number) => void;
   setTrackMuted: (trackId: string, muted: boolean) => void;
+  removeTrack: (trackId: string) => void;
   setTrackSoloed: (trackId: string, soloed: boolean) => void;
   setTrackPitch: (trackId: string, semitones: number) => void;
   cleanup: () => void;
@@ -337,6 +338,19 @@ export const useAudioStore = create<AudioState>((set, get) => {
         track.muted = muted;
         set({ loadedTracks: new Map(loadedTracks) });
         updateSoloState();
+      }
+    },
+
+    removeTrack: (trackId) => {
+      const { loadedTracks } = get();
+      const track = loadedTracks.get(trackId);
+      if (track) {
+        if (track.source) {
+          try { track.source.stop(); } catch {}
+        }
+        loadedTracks.delete(trackId);
+        set({ loadedTracks: new Map(loadedTracks) });
+        recalcDuration();
       }
     },
 
