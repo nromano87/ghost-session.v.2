@@ -930,10 +930,14 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
     analyserRef.current = analyser;
 
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    let logCount = 0;
     const checkLevel = () => {
       analyser.getByteFrequencyData(dataArray);
       const avg = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length;
-      setIsSpeaking(avg > 15);
+      if (logCount++ % 60 === 0) console.log('[Mic Level]', avg.toFixed(1));
+      const speaking = avg > 5;
+      setIsSpeaking(speaking);
+      (window as any).__ghostSpeaking = speaking;
       animFrameRef.current = requestAnimationFrame(checkLevel);
     };
     checkLevel();
@@ -944,24 +948,39 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
     if (streamRef.current) {
       streamRef.current.getAudioTracks().forEach(t => t.stop());
     }
-    try {
-      const constraints: MediaStreamConstraints = {
-        audio: deviceId ? { deviceId: { exact: deviceId } } : true,
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      if (streamRef.current) {
-        // Add new audio track to existing stream
-        stream.getAudioTracks().forEach(t => streamRef.current!.addTrack(t));
-      } else {
-        streamRef.current = stream;
-      }
-      setupAnalyser(streamRef.current);
-      setMicOn(true);
-      // Refresh device list after permission granted
-      fetchDevices();
-    } catch (err) {
-      console.error('Mic error:', err);
+
+    // Try requested device first, then fall back to others
+    const devicesToTry: (string | undefined)[] = [];
+    if (deviceId) devicesToTry.push(deviceId);
+    // Add all available audio devices as fallbacks
+    for (const d of audioDevices) {
+      if (d.deviceId !== deviceId) devicesToTry.push(d.deviceId);
     }
+    if (!deviceId) devicesToTry.unshift(undefined); // try default first
+
+    for (const tryId of devicesToTry) {
+      try {
+        const constraints: MediaStreamConstraints = {
+          audio: tryId
+            ? { deviceId: { ideal: tryId }, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            : { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        };
+        console.log('[Mic] Trying device:', tryId || 'default');
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        streamRef.current = stream;
+        setupAnalyser(stream);
+        setMicOn(true);
+        if (tryId) setSelectedDeviceId(tryId);
+        fetchDevices();
+        console.log('[Mic] Started:', stream.getAudioTracks()[0]?.label);
+        return;
+      } catch (err: any) {
+        console.warn('[Mic] Failed device:', tryId || 'default', err?.name, err?.message);
+        continue;
+      }
+    }
+    console.error('[Mic] All devices failed');
+    alert('Could not access any microphone. Make sure no other app is using it exclusively.');
   };
 
   const startCamera = async (deviceId?: string) => {
@@ -1009,9 +1028,8 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
   const selectDevice = async (deviceId: string) => {
     setSelectedDeviceId(deviceId);
     setShowMicMenu(false);
-    if (micOn) {
-      await startMic(deviceId);
-    }
+    // Always start mic when selecting a device
+    await startMic(deviceId);
   };
 
   const selectCam = async (deviceId: string) => {
@@ -1105,10 +1123,10 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
       )}
       {showMicMenu && menuPos && createPortal(
         <div ref={micMenuRef} className="fixed py-1.5 rounded-xl shadow-2xl animate-popup" style={{ zIndex: 9999, background: 'rgba(20,10,35,0.97)', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(20px)', top: menuPos.top, right: 6, width: 304 }}>
-          <button onClick={() => { toggleMic(); setShowMicMenu(false); }}
-            className="w-full text-left px-3 py-2 text-[12px] hover:bg-white/10 transition-colors text-white font-medium flex items-center gap-2"
+          <button onClick={async () => { if (micOn) { toggleMic(); } else { await startMic(selectedDeviceId || undefined); } setShowMicMenu(false); }}
+            className={`w-full text-left px-3 py-2 text-[12px] hover:bg-white/10 transition-colors font-medium flex items-center gap-2 ${micOn ? 'text-red-400' : 'text-green-400'}`}
           >
-            <span className={`w-2 h-2 rounded-full ${micOn ? 'bg-green-500' : 'bg-white/20'}`} />
+            <span className={`w-2 h-2 rounded-full ${micOn ? 'bg-green-500' : 'bg-red-500'}`} />
             {micOn ? 'Mute Microphone' : 'Unmute Microphone'}
           </button>
           <div className="h-px bg-white/10 mx-2 my-1" />
@@ -1151,10 +1169,19 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
             {isMe && !cameraOn && (
               <div className="absolute inset-0 flex items-center justify-center pb-6">
                 <div
-                  className={`rounded-full transition-all duration-150 shadow-[0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] ${isSpeaking && micOn ? 'ring-[3px] ring-green-500 shadow-[0_0_12px_rgba(34,197,94,0.5)]' : 'shadow-[0_0_20px_rgba(124,58,237,0.3),0_2px_8px_rgba(0,0,0,0.3)]'}`}
-                  style={{ padding: '3px', background: 'linear-gradient(180deg, #7C3AED 0%, #581C87 100%)', borderRadius: '9999px' }}
+                  className="rounded-full relative"
                 >
-                  <Avatar name={me!.displayName || '?'} src={me!.avatarUrl} size="xl" />
+                  {isSpeaking && micOn && (
+                    <motion.div
+                      className="absolute inset-[-10px] rounded-full pointer-events-none"
+                      style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.35) 30%, rgba(0,255,200,0.15) 60%, transparent 80%)' }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.4, 0.8] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
+                  <div className="relative z-10">
+                    <Avatar name={me!.displayName || '?'} src={me!.avatarUrl} size="xl" />
+                  </div>
                 </div>
               </div>
             )}
@@ -1195,9 +1222,13 @@ function VideoGrid({ members, userId }: { members: any[]; userId?: string }) {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
                   </motion.button>
                   <motion.button ref={micBtnRef} onClick={handleMicClick} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${micOn ? 'bg-green-600 text-white' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${micOn ? 'bg-green-600 text-white' : 'bg-red-500/80 text-white'}`}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
+                    {micOn ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="1" y1="1" x2="23" y2="23" /><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" /><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
+                    )}
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                     className="w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-white/10 text-white/50 hover:bg-white/20"
@@ -2707,6 +2738,15 @@ export default function PluginLayout() {
   };
   const [showSettings, setShowSettings] = useState(false);
   const [trackZoom, setTrackZoom] = useState<'full' | 'half'>('full');
+  const [headerSpeaking, setHeaderSpeaking] = useState(false);
+
+  // Poll speaking state from VideoGrid
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeaderSpeaking(!!(window as any).__ghostSpeaking);
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
   const [showNotifs, setShowNotifs] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [showFriendSearch, setShowFriendSearch] = useState(false);
@@ -3132,7 +3172,7 @@ export default function PluginLayout() {
             <button className="text-white/40 hover:text-ghost-green transition-colors" title="Inbox">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></svg>
             </button>
-            <button onClick={() => { setShowSettings(!showSettings); setShowNotifs(false); }} className="shrink-0 rounded-full hover:ring-2 hover:ring-ghost-green/50 transition-all">
+            <button onClick={() => { setShowSettings(!showSettings); setShowNotifs(false); }} className="shrink-0 rounded-full outline-none focus:outline-none">
               <Avatar name={user?.displayName || '?'} src={user?.avatarUrl} size="sm" />
             </button>
           </div>
