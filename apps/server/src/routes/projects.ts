@@ -8,6 +8,7 @@ import { authMiddleware, type AuthUser } from '../middleware/auth.js';
 import { createAutoSnapshot } from '../lib/autoSnapshot.js';
 import { postActivityComment } from '../lib/activityComment.js';
 import { assertMember, assertEditor } from '../lib/membership.js';
+import { emitProjectUpdated } from '../ws/index.js';
 
 const projectRoutes = new Hono();
 projectRoutes.use('*', authMiddleware);
@@ -117,6 +118,7 @@ projectRoutes.patch('/:id', async (c) => {
   await createAutoSnapshot(projectId, user.id, `Updated project: ${changes}`);
   await postActivityComment(projectId, user.id, `✏️ updated project settings: ${changes}`);
 
+  emitProjectUpdated(projectId, 'metadata-updated');
   return c.json({ success: true, data: updated });
 });
 

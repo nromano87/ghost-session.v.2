@@ -114,6 +114,10 @@ export interface ServerToClientEvents {
     userId: string;
     streamType?: StreamType;
   }) => void;
+  'project-updated': (data: {
+    projectId: string;
+    reason: 'track-added' | 'track-updated' | 'track-deleted' | 'version-created' | 'metadata-updated' | 'member-changed';
+  }) => void;
   'error': (data: {
     message: string;
   }) => void;

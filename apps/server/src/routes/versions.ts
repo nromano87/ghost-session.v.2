@@ -8,6 +8,7 @@ import { authMiddleware, type AuthUser } from '../middleware/auth.js';
 import { assertMember, assertEditor } from '../lib/membership.js';
 import { createAutoSnapshot } from '../lib/autoSnapshot.js';
 import { postActivityComment } from '../lib/activityComment.js';
+import { emitProjectUpdated } from '../ws/index.js';
 
 const versionRoutes = new Hono();
 versionRoutes.use('*', authMiddleware);
@@ -67,6 +68,7 @@ versionRoutes.post('/', async (c) => {
   }).run();
 
   const [version] = await db.select().from(versions).where(eq(versions.id, id)).all();
+  emitProjectUpdated(projectId, 'version-created');
   return c.json({ success: true, data: version }, 201);
 });
 
@@ -158,6 +160,7 @@ versionRoutes.post('/:versionId/revert', async (c) => {
 
   await postActivityComment(projectId, user.id, `⏪ reverted project to version ${version.versionNumber}: ${version.name}`);
 
+  emitProjectUpdated(projectId, 'version-created');
   return c.json({ success: true, message: `Reverted to version ${version.versionNumber}` });
 });
 

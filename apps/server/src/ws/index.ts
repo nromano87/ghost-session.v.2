@@ -82,3 +82,8 @@ let ioInstance: SocketServer | null = null;
 export function getIO() {
   return ioInstance;
 }
+
+/** Emit project-updated to all clients in a project room */
+export function emitProjectUpdated(projectId: string, reason: 'track-added' | 'track-updated' | 'track-deleted' | 'version-created' | 'metadata-updated' | 'member-changed') {
+  ioInstance?.to(`project:${projectId}`).emit('project-updated', { projectId, reason });
+}

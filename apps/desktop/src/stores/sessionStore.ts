@@ -24,8 +24,15 @@ interface SessionState {
   deleteMessage: (index: number) => void;
 }
 
-// Stored reference so we can remove it on leave
+// Stored references so we can remove on leave
 let reconnectHandler: (() => void) | null = null;
+
+// Callback for project-updated events — set by PluginLayout
+let projectUpdatedCallback: ((data: { projectId: string; reason: string }) => void) | null = null;
+
+export function onProjectUpdated(cb: typeof projectUpdatedCallback) {
+  projectUpdatedCallback = cb;
+}
 
 export const useSessionStore = create<SessionState>((set, get) => ({
   isConnected: false,
@@ -47,6 +54,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     socket.off('user-left');
     socket.off('chat-message');
     socket.off('delete-chat-message');
+    socket.off('project-updated');
 
     joinProject(projectId);
     set({ currentProjectId: projectId, isConnected: true });
@@ -91,6 +99,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     socket.on('delete-chat-message', ({ timestamp }) => {
       set((s) => ({ chatMessages: s.chatMessages.filter((m) => m.timestamp !== timestamp) }));
     });
+
+    socket.on('project-updated', (data) => {
+      if (projectUpdatedCallback) projectUpdatedCallback(data);
+    });
   },
 
   leave: () => {
@@ -107,6 +119,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     socket?.off('user-left');
     socket?.off('chat-message');
     socket?.off('delete-chat-message');
+    socket?.off('project-updated');
 
     set({ currentProjectId: null, isConnected: false, onlineUsers: [], chatMessages: [] });
   },

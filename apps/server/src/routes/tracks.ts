@@ -8,6 +8,7 @@ import { authMiddleware, type AuthUser } from '../middleware/auth.js';
 import { assertMember, assertEditor } from '../lib/membership.js';
 import { createAutoSnapshot } from '../lib/autoSnapshot.js';
 import { postActivityComment } from '../lib/activityComment.js';
+import { emitProjectUpdated } from '../ws/index.js';
 
 const trackRoutes = new Hono();
 trackRoutes.use('*', authMiddleware);
@@ -72,6 +73,7 @@ trackRoutes.post('/', async (c) => {
     }).run();
   }
 
+  emitProjectUpdated(projectId, 'track-added');
   return c.json({ success: true, data: track }, 201);
 });
 
@@ -92,6 +94,7 @@ trackRoutes.patch('/:trackId', async (c) => {
 
   await createAutoSnapshot(projectId, user.id, `Updated track: ${updated.name}`);
 
+  emitProjectUpdated(projectId, 'track-updated');
   return c.json({ success: true, data: updated });
 });
 
@@ -127,6 +130,7 @@ trackRoutes.delete('/:trackId', async (c) => {
     }).run();
   }
 
+  emitProjectUpdated(projectId, 'track-deleted');
   return c.json({ success: true });
 });
 

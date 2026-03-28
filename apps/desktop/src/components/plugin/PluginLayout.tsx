@@ -7,7 +7,7 @@ import { api } from '../../lib/api';
 import { onGlobalOnlineUsers, type OnlineUser } from '../../lib/socket';
 import Avatar from '../common/Avatar';
 import ChatPanel from '../session/ChatPanel';
-import { useSessionStore } from '../../stores/sessionStore';
+import { useSessionStore, onProjectUpdated } from '../../stores/sessionStore';
 import { useAudioStore } from '../../stores/audioStore';
 import { API_BASE } from '../../lib/constants';
 import { audioBufferCache, rawDataCache } from '../../lib/audio';
@@ -299,10 +299,16 @@ export default function PluginLayout() {
     return () => clearInterval(pollInterval);
   }, []);
 
+  // Event-driven project refresh (replaces 3-second polling)
   useEffect(() => {
     if (!selectedProjectId) return;
-    const poll = setInterval(() => { fetchProject(selectedProjectId); fetchVersions(selectedProjectId); fetchNotifications(); }, 3000);
-    return () => clearInterval(poll);
+    onProjectUpdated((data) => {
+      if (data.projectId === selectedProjectId) {
+        fetchProject(selectedProjectId);
+        fetchVersions(selectedProjectId);
+      }
+    });
+    return () => onProjectUpdated(null);
   }, [selectedProjectId]);
 
   useEffect(() => {
