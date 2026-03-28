@@ -4,6 +4,22 @@ export type StreamType = 'camera' | 'screen';
 
 // ── Client → Server ──────────────────────────────────────────────────
 
+export interface OnlineUser {
+  userId: string;
+  displayName: string;
+  currentProjectId: string | null;
+  currentProjectName: string | null;
+}
+
+export interface ChatMessagePayload {
+  id?: string;
+  userId: string;
+  displayName: string;
+  colour: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface ClientToServerEvents {
   'join-project': (data: { projectId: string }) => void;
   'leave-project': (data: { projectId: string }) => void;
@@ -22,6 +38,7 @@ export interface ClientToServerEvents {
   'delete-chat-message': (data: {
     projectId: string;
     timestamp: number;
+    messageId?: string;
   }) => void;
   'webrtc-offer': (data: {
     projectId: string;
@@ -64,16 +81,12 @@ export interface ServerToClientEvents {
   'presence-update': (data: {
     users: PresenceInfo[];
   }) => void;
-  'chat-message': (data: {
-    userId: string;
-    displayName: string;
-    colour: string;
-    text: string;
-    timestamp: number;
-  }) => void;
+  'chat-message': (data: ChatMessagePayload) => void;
   'delete-chat-message': (data: {
     timestamp: number;
+    messageId?: string;
   }) => void;
+  'global:online-users': (users: OnlineUser[]) => void;
   'user-joined': (data: {
     userId: string;
     displayName: string;

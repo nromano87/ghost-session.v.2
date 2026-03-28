@@ -1,22 +1,16 @@
 import { io, Socket } from 'socket.io-client';
-import type { ClientToServerEvents, ServerToClientEvents, StreamType } from '@ghost/protocol';
+import type { ClientToServerEvents, ServerToClientEvents, StreamType, OnlineUser } from '@ghost/protocol';
 import type { PresenceInfo } from '@ghost/types';
+import { SERVER_BASE, SOCKET_TRANSPORTS } from './constants';
+
+export type { OnlineUser };
 
 type GhostSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
-
-import { SERVER_BASE, SOCKET_TRANSPORTS } from './constants';
 
 const SOCKET_URL = import.meta.env.VITE_WS_URL || SERVER_BASE;
 
 let socket: GhostSocket | null = null;
-let globalOnlineCallback: ((users: any[]) => void) | null = null;
-
-export interface OnlineUser {
-  userId: string;
-  displayName: string;
-  currentProjectId: string | null;
-  currentProjectName: string | null;
-}
+let globalOnlineCallback: ((users: OnlineUser[]) => void) | null = null;
 
 export function onGlobalOnlineUsers(cb: (users: OnlineUser[]) => void) {
   globalOnlineCallback = cb;
@@ -32,7 +26,7 @@ export function connectSocket(token: string): GhostSocket {
 
   socket.on('connect', () => console.log('[WS] Connected'));
   socket.on('disconnect', () => console.log('[WS] Disconnected'));
-  (socket as any).on('global:online-users', (users: any[]) => {
+  socket.on('global:online-users', (users) => {
     if (globalOnlineCallback) globalOnlineCallback(users);
   });
 

@@ -52,7 +52,7 @@ export function setupWebSocket(httpServer: HTTPServer) {
 
   function broadcastOnlineUsers() {
     const list = Array.from(globalOnline.values());
-    io.emit('global:online-users' as any, list);
+    io.emit('global:online-users', list);
   }
 
   io.on('connection', (socket) => {
