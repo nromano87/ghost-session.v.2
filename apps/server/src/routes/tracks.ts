@@ -5,6 +5,7 @@ import { db } from '../db/index.js';
 import { tracks, projectMembers, projects, notifications } from '../db/schema.js';
 import { eq, and, ne } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
+import { assertMember, assertEditor } from '../lib/membership.js';
 import { createAutoSnapshot } from '../lib/autoSnapshot.js';
 import { postActivityComment } from '../lib/activityComment.js';
 
@@ -43,12 +44,7 @@ trackRoutes.post('/', async (c) => {
   const projectId = c.req.param('id');
   const body = addTrackSchema.parse(await c.req.json());
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No edit permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   const existing = await db.select().from(tracks).where(eq(tracks.projectId, projectId)).all();
   const id = crypto.randomUUID();
@@ -85,12 +81,7 @@ trackRoutes.patch('/:trackId', async (c) => {
   const trackId = c.req.param('trackId');
   const body = updateTrackSchema.parse(await c.req.json());
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No edit permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   await db.update(tracks).set(body)
     .where(and(eq(tracks.id, trackId), eq(tracks.projectId, projectId))).run();
@@ -114,12 +105,7 @@ trackRoutes.delete('/:trackId', async (c) => {
   if (!track) throw new HTTPException(404, { message: 'Track not found' });
 
   if (track.ownerId !== user.id) {
-    const membership = await db.select().from(projectMembers)
-      .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-      .limit(1).all();
-    if (membership.length === 0 || membership[0].role === 'viewer') {
-      throw new HTTPException(403, { message: 'No permission' });
-    }
+    await assertEditor(projectId, user.id);
   }
 
   const deletedName = track.name;

@@ -2,9 +2,10 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
 import { db } from '../db/index.js';
-import { comments, users, projectMembers } from '../db/schema.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { comments, users } from '../db/schema.js';
+import { eq, desc } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
+import { assertMember, assertEditor } from '../lib/membership.js';
 
 const commentRoutes = new Hono();
 commentRoutes.use('*', authMiddleware);
@@ -36,10 +37,7 @@ commentRoutes.post('/', async (c) => {
   const projectId = c.req.param('id');
   const body = addCommentSchema.parse(await c.req.json());
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0) throw new HTTPException(403, { message: 'Not a member' });
+  await assertMember(projectId, user.id);
 
   const id = crypto.randomUUID();
   const now = new Date().toISOString();

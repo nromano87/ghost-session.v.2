@@ -2,9 +2,10 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
 import { db } from '../db/index.js';
-import { versions, projectMembers, users, files, tracks, projects } from '../db/schema.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { versions, users, files, tracks, projects } from '../db/schema.js';
+import { eq, desc } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
+import { assertMember, assertEditor } from '../lib/membership.js';
 import { createAutoSnapshot } from '../lib/autoSnapshot.js';
 import { postActivityComment } from '../lib/activityComment.js';
 
@@ -42,12 +43,7 @@ versionRoutes.post('/', async (c) => {
   const projectId = c.req.param('id');
   const body = createVersionSchema.parse(await c.req.json());
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No edit permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   const existing = await db.select().from(versions)
     .where(eq(versions.projectId, projectId))
@@ -96,12 +92,7 @@ versionRoutes.post('/:versionId/revert', async (c) => {
   const projectId = c.req.param('id');
   const versionId = c.req.param('versionId');
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No edit permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   const [version] = await db.select().from(versions).where(eq(versions.id, versionId)).limit(1).all();
   if (!version) throw new HTTPException(404, { message: 'Version not found' });

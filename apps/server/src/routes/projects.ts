@@ -7,6 +7,7 @@ import { eq, or, and, desc, like } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
 import { createAutoSnapshot } from '../lib/autoSnapshot.js';
 import { postActivityComment } from '../lib/activityComment.js';
+import { assertMember, assertEditor } from '../lib/membership.js';
 
 const projectRoutes = new Hono();
 projectRoutes.use('*', authMiddleware);
@@ -76,11 +77,7 @@ projectRoutes.get('/:id', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-
-  if (membership.length === 0) throw new HTTPException(403, { message: 'Not a member' });
+  await assertMember(projectId, user.id);
 
   const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1).all();
   if (!project) throw new HTTPException(404, { message: 'Project not found' });
@@ -109,13 +106,7 @@ projectRoutes.patch('/:id', async (c) => {
   const projectId = c.req.param('id');
   const body = updateProjectSchema.parse(await c.req.json());
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No edit permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   await db.update(projects).set({ ...body, updatedAt: new Date().toISOString() })
     .where(eq(projects.id, projectId)).run();
@@ -147,13 +138,7 @@ projectRoutes.post('/:id/members', async (c) => {
   const projectId = c.req.param('id');
   const body = inviteMemberSchema.parse(await c.req.json());
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No permission to invite' });
-  }
+  await assertEditor(projectId, user.id);
 
   let invitee;
   if (body.email) {
@@ -196,11 +181,9 @@ projectRoutes.delete('/:id/members/:userId', async (c) => {
   const projectId = c.req.param('id');
   const targetUserId = c.req.param('userId');
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
+  const membership = await assertMember(projectId, user.id);
 
-  if (membership.length === 0 || membership[0].role !== 'owner') {
+  if (membership.role !== 'owner') {
     throw new HTTPException(403, { message: 'Only the project owner can remove members' });
   }
 
@@ -224,15 +207,9 @@ projectRoutes.post('/:id/leave', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
+  const membership = await assertMember(projectId, user.id);
 
-  if (membership.length === 0) {
-    throw new HTTPException(404, { message: 'Not a member of this project' });
-  }
-
-  if (membership[0].role === 'owner') {
+  if (membership.role === 'owner') {
     throw new HTTPException(400, { message: 'Owner cannot leave the project. Transfer ownership or delete it.' });
   }
 

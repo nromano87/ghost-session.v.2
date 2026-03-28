@@ -187,6 +187,33 @@ export async function initDatabase() {
     try { await client.execute(m); } catch {}
   }
 
+  // Performance indexes on FK columns and common query paths
+  const indexes = [
+    `CREATE INDEX IF NOT EXISTS idx_project_members_user ON project_members(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_project_members_project ON project_members(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_tracks_project ON tracks(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_tracks_owner ON tracks(owner_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_versions_project ON versions(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_comments_project ON comments(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_files_project ON files(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_chat_messages_project ON chat_messages(project_id, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_invitations_invitee ON invitations(invitee_id, status)`,
+    `CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_posts_user ON social_posts(user_id, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_likes_post ON social_post_likes(post_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_likes_user ON social_post_likes(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_comments_post ON social_post_comments(post_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_reactions_post ON social_post_reactions(post_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_sample_packs_owner ON sample_packs(owner_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_sample_pack_items_pack ON sample_pack_items(pack_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions(user_id)`,
+  ];
+  for (const idx of indexes) {
+    try { await client.execute(idx); } catch {}
+  }
+
   console.log('  Database initialized (Turso/libsql)');
 }
 

@@ -2,9 +2,10 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
 import { db } from '../db/index.js';
-import { files, projectMembers } from '../db/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { files } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
+import { assertMember, assertEditor } from '../lib/membership.js';
 import { getUploadUrl, getDownloadUrl, isR2Configured, uploadToR2, downloadFromR2 } from '../services/storage.js';
 import { createReadStream } from 'node:fs';
 import { mkdir, stat } from 'node:fs/promises';
@@ -27,12 +28,7 @@ fileRoutes.post('/upload-url', async (c) => {
   const projectId = c.req.param('id');
   const body = uploadUrlSchema.parse(await c.req.json());
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No upload permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   const fileId = crypto.randomUUID();
   const s3Key = `projects/${projectId}/${fileId}/${body.fileName}`;
@@ -56,12 +52,7 @@ fileRoutes.post('/upload', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No upload permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   const formData = await c.req.formData();
   const file = formData.get('file') as File | null;

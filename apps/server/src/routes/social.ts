@@ -1,30 +1,60 @@
 import { Hono } from 'hono';
 import { db } from '../db/index.js';
 import { socialPosts, socialPostLikes, socialPostComments, socialPostReactions, follows, users, projects, tracks } from '../db/schema.js';
-import { eq, desc, and, ne } from 'drizzle-orm';
+import { eq, desc, and, ne, inArray, sql, count } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
 import { isR2Configured, uploadToR2, downloadFromR2 } from '../services/storage.js';
 
 const socialRoutes = new Hono();
 socialRoutes.use('*', authMiddleware);
 
+// Batch-enriches posts with likes, comments, reactions in 4 queries instead of 3N+1
 async function enrichPosts(rawPosts: any[], uid: string) {
-  const enriched = [];
-  for (const p of rawPosts) {
-    const likes = await db.select().from(socialPostLikes).where(eq(socialPostLikes.postId, p.id)).all();
-    const comments = await db.select().from(socialPostComments).where(eq(socialPostComments.postId, p.id)).all();
-    const reactions = await db.select().from(socialPostReactions).where(eq(socialPostReactions.postId, p.id)).all();
+  if (rawPosts.length === 0) return [];
+  const postIds = rawPosts.map(p => p.id);
+
+  // Batch load all related data in parallel (4 queries total, not 3N)
+  const [allLikes, allCommentCounts, allReactions, allProjects] = await Promise.all([
+    db.select().from(socialPostLikes).where(inArray(socialPostLikes.postId, postIds)).all(),
+    db.select({ postId: socialPostComments.postId, count: count() }).from(socialPostComments).where(inArray(socialPostComments.postId, postIds)).groupBy(socialPostComments.postId).all(),
+    db.select().from(socialPostReactions).where(inArray(socialPostReactions.postId, postIds)).all(),
+    (() => {
+      const projectIds = [...new Set(rawPosts.map(p => p.projectId).filter(Boolean))];
+      if (projectIds.length === 0) return Promise.resolve([]);
+      return db.select({ id: projects.id, name: projects.name }).from(projects).where(inArray(projects.id, projectIds)).all();
+    })(),
+  ]);
+
+  // Index by postId for O(1) lookups
+  const likesByPost = new Map<string, typeof allLikes>();
+  for (const l of allLikes) {
+    if (!likesByPost.has(l.postId)) likesByPost.set(l.postId, []);
+    likesByPost.get(l.postId)!.push(l);
+  }
+  const commentCountByPost = new Map(allCommentCounts.map(c => [c.postId, c.count]));
+  const reactionsByPost = new Map<string, typeof allReactions>();
+  for (const r of allReactions) {
+    if (!reactionsByPost.has(r.postId)) reactionsByPost.set(r.postId, []);
+    reactionsByPost.get(r.postId)!.push(r);
+  }
+  const projectNameMap = new Map(allProjects.map(p => [p.id, p.name]));
+
+  return rawPosts.map(p => {
+    const likes = likesByPost.get(p.id) || [];
+    const reactions = reactionsByPost.get(p.id) || [];
     const rc: Record<string, number> = {};
     const ur: string[] = [];
     for (const r of reactions) { rc[r.emoji] = (rc[r.emoji] || 0) + 1; if (r.userId === uid) ur.push(r.emoji); }
-    let projectName = null;
-    if (p.projectId) {
-      const [proj] = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, p.projectId)).limit(1).all();
-      projectName = proj?.name || null;
-    }
-    enriched.push({ ...p, likeCount: likes.length, commentCount: comments.length, liked: likes.some((l) => l.userId === uid), reactionCounts: rc, userReactions: ur, projectName });
-  }
-  return enriched;
+    return {
+      ...p,
+      likeCount: likes.length,
+      commentCount: commentCountByPost.get(p.id) || 0,
+      liked: likes.some(l => l.userId === uid),
+      reactionCounts: rc,
+      userReactions: ur,
+      projectName: p.projectId ? (projectNameMap.get(p.projectId) || null) : null,
+    };
+  });
 }
 
 socialRoutes.get('/feed', async (c) => {
@@ -174,14 +204,25 @@ socialRoutes.get('/audio/:fileId', async (c) => {
 
 socialRoutes.get('/explore', async (c) => {
   const user = c.get('user') as AuthUser;
-  const allUsers = await db.select({ id: users.id, displayName: users.displayName, avatarUrl: users.avatarUrl, createdAt: users.createdAt }).from(users).where(ne(users.id, user.id)).all();
-  const myFollows = new Set((await db.select().from(follows).where(eq(follows.followerId, user.id)).all()).map(f => f.followingId));
-  const data = [];
-  for (const u of allUsers) {
-    const followerCount = (await db.select().from(follows).where(eq(follows.followingId, u.id)).all()).length;
-    const postCount = (await db.select().from(socialPosts).where(eq(socialPosts.userId, u.id)).all()).length;
-    data.push({ ...u, followerCount, postCount, isFollowing: myFollows.has(u.id) });
-  }
+
+  // 4 queries total instead of 2N
+  const [allUsers, myFollows, followerCounts, postCounts] = await Promise.all([
+    db.select({ id: users.id, displayName: users.displayName, avatarUrl: users.avatarUrl, createdAt: users.createdAt }).from(users).where(ne(users.id, user.id)).all(),
+    db.select({ followingId: follows.followingId }).from(follows).where(eq(follows.followerId, user.id)).all(),
+    db.select({ userId: follows.followingId, count: count() }).from(follows).groupBy(follows.followingId).all(),
+    db.select({ userId: socialPosts.userId, count: count() }).from(socialPosts).groupBy(socialPosts.userId).all(),
+  ]);
+
+  const myFollowSet = new Set(myFollows.map(f => f.followingId));
+  const followerMap = new Map(followerCounts.map(f => [f.userId, f.count]));
+  const postMap = new Map(postCounts.map(p => [p.userId, p.count]));
+
+  const data = allUsers.map(u => ({
+    ...u,
+    followerCount: followerMap.get(u.id) || 0,
+    postCount: postMap.get(u.id) || 0,
+    isFollowing: myFollowSet.has(u.id),
+  }));
   return c.json({ success: true, data });
 });
 
@@ -192,9 +233,14 @@ socialRoutes.get('/profile/:userId', async (c) => {
   if (!tu) return c.json({ success: false, error: 'User not found' }, 404);
   const userPosts = await db.select({ id: socialPosts.id, text: socialPosts.text, projectId: socialPosts.projectId, userId: socialPosts.userId, displayName: users.displayName, avatarUrl: users.avatarUrl, createdAt: socialPosts.createdAt })
     .from(socialPosts).innerJoin(users, eq(socialPosts.userId, users.id)).where(eq(socialPosts.userId, tid)).orderBy(desc(socialPosts.createdAt)).limit(20).all();
-  const followerCount = (await db.select().from(follows).where(eq(follows.followingId, tid)).all()).length;
-  const followingCount = (await db.select().from(follows).where(eq(follows.followerId, tid)).all()).length;
-  const isFollowing = (await db.select().from(follows).where(and(eq(follows.followerId, cur.id), eq(follows.followingId, tid))).limit(1).all()).length > 0;
+  const [followerResult, followingResult, isFollowingResult] = await Promise.all([
+    db.select({ count: count() }).from(follows).where(eq(follows.followingId, tid)).all(),
+    db.select({ count: count() }).from(follows).where(eq(follows.followerId, tid)).all(),
+    db.select().from(follows).where(and(eq(follows.followerId, cur.id), eq(follows.followingId, tid))).limit(1).all(),
+  ]);
+  const followerCount = followerResult[0]?.count || 0;
+  const followingCount = followingResult[0]?.count || 0;
+  const isFollowing = isFollowingResult.length > 0;
   return c.json({ success: true, data: {
     id: tu.id, displayName: tu.displayName, avatarUrl: tu.avatarUrl, createdAt: tu.createdAt,
     followerCount, followingCount, postCount: userPosts.length, isFollowing,
@@ -205,11 +251,18 @@ socialRoutes.get('/profile/:userId', async (c) => {
 socialRoutes.get('/activity', async (c) => {
   const recentTracks = await db.select({ trackName: tracks.name, trackType: tracks.type, userId: tracks.ownerId, displayName: users.displayName, avatarUrl: users.avatarUrl, projectId: tracks.projectId, createdAt: tracks.createdAt })
     .from(tracks).innerJoin(users, eq(tracks.ownerId, users.id)).orderBy(desc(tracks.createdAt)).limit(20).all();
-  const activities = [];
-  for (const t of recentTracks) {
-    const [proj] = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, t.projectId)).limit(1).all();
-    activities.push({ type: 'upload', message: `uploaded "${t.trackName}" to ${proj?.name || 'a project'}`, userId: t.userId, displayName: t.displayName, avatarUrl: t.avatarUrl, createdAt: t.createdAt });
-  }
+
+  // Batch load project names (1 query instead of N)
+  const projectIds = [...new Set(recentTracks.map(t => t.projectId).filter(Boolean))];
+  const projectNames = projectIds.length > 0
+    ? new Map((await db.select({ id: projects.id, name: projects.name }).from(projects).where(inArray(projects.id, projectIds)).all()).map(p => [p.id, p.name]))
+    : new Map();
+
+  const activities = recentTracks.map(t => ({
+    type: 'upload',
+    message: `uploaded "${t.trackName}" to ${projectNames.get(t.projectId) || 'a project'}`,
+    userId: t.userId, displayName: t.displayName, avatarUrl: t.avatarUrl, createdAt: t.createdAt,
+  }));
   return c.json({ success: true, data: activities });
 });
 

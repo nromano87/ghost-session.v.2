@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { db } from '../db/index.js';
-import { files, projectMembers, users } from '../db/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { files, users } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
+import { assertMember, assertEditor } from '../lib/membership.js';
 import { isR2Configured, uploadToR2 } from '../services/storage.js';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -18,12 +19,7 @@ sessionRoutes.post('/upload', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No upload permission' });
-  }
+  await assertEditor(projectId, user.id);
 
   const formData = await c.req.parseBody();
   const file = formData['file'];
@@ -68,12 +64,7 @@ sessionRoutes.get('/', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const membership = await db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-  if (membership.length === 0) {
-    throw new HTTPException(403, { message: 'Not a member' });
-  }
+  await assertMember(projectId, user.id);
 
   const result = await db.select({
     id: files.id,
