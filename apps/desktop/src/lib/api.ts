@@ -75,6 +75,8 @@ export const api = {
     request<Track>('PATCH', `/projects/${projectId}/tracks/${trackId}`, data),
   deleteTrack: (projectId: string, trackId: string) =>
     request<void>('DELETE', `/projects/${projectId}/tracks/${trackId}`),
+  reorderTracks: (projectId: string, trackIds: string[]) =>
+    request<void>('PUT', `/projects/${projectId}/tracks/reorder`, { trackIds }),
 
   // Versions
   listVersions: (projectId: string) => request<Version[]>('GET', `/projects/${projectId}/versions`),

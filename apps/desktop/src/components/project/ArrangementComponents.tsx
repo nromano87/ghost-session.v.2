@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAudioStore } from '../../stores/audioStore';
 import { api } from '../../lib/api';
 import { audioBufferCache } from '../../lib/audio';
@@ -158,6 +158,87 @@ export function BarGridOverlay() {
           <div key={i} className="absolute top-0 bottom-0 w-px bg-white/[0.06]" style={{ left: `${leftPct}%` }} />
         );
       })}
+    </div>
+  );
+}
+
+export function DraggableTrackList({ tracks, selectedProjectId, deleteTrack, updateTrack, trackZoom, fetchProject }: {
+  tracks: any[];
+  selectedProjectId: string;
+  deleteTrack: any;
+  updateTrack: any;
+  trackZoom: 'full' | 'half';
+  fetchProject: any;
+}) {
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+  const reversed = [...tracks].reverse();
+
+  const handleDragStart = useCallback((e: React.DragEvent, idx: number) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(idx));
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setOverIdx(idx);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent, dropIdx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === dropIdx) {
+      setDragIdx(null);
+      setOverIdx(null);
+      return;
+    }
+
+    const reordered = [...reversed];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+
+    // Reverse back to get original order (DB stores oldest-first)
+    const newOrder = [...reordered].reverse();
+    const trackIds = newOrder.map((t: any) => t.id);
+
+    setDragIdx(null);
+    setOverIdx(null);
+
+    await api.reorderTracks(selectedProjectId, trackIds);
+    fetchProject(selectedProjectId);
+  }, [dragIdx, reversed, selectedProjectId, fetchProject]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragIdx(null);
+    setOverIdx(null);
+  }, []);
+
+  return (
+    <div className="relative space-y-1">
+      {reversed.map((track: any, idx: number) => (
+        <div
+          key={track.id}
+          draggable
+          onDragStart={(e) => handleDragStart(e, idx)}
+          onDragOver={(e) => handleDragOver(e, idx)}
+          onDrop={(e) => handleDrop(e, idx)}
+          onDragEnd={handleDragEnd}
+          className={`relative transition-transform duration-150 ${
+            dragIdx === idx ? 'opacity-40 scale-[0.98]' : ''
+          } ${overIdx === idx && dragIdx !== idx ? 'ring-2 ring-purple-500/60 ring-inset rounded-xl' : ''}`}
+        >
+          <TrackWithWidth
+            track={track}
+            selectedProjectId={selectedProjectId}
+            deleteTrack={deleteTrack}
+            updateTrack={updateTrack}
+            trackZoom={trackZoom}
+            fetchProject={fetchProject}
+          />
+        </div>
+      ))}
+      <BarGridOverlay />
     </div>
   );
 }

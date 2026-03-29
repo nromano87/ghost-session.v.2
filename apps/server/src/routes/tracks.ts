@@ -98,6 +98,22 @@ trackRoutes.patch('/:trackId', async (c) => {
   return c.json({ success: true, data: updated });
 });
 
+trackRoutes.put('/reorder', async (c) => {
+  const user = c.get('user') as AuthUser;
+  const projectId = c.req.param('id');
+  const { trackIds } = z.object({ trackIds: z.array(z.string()) }).parse(await c.req.json());
+
+  await assertEditor(projectId, user.id);
+
+  for (let i = 0; i < trackIds.length; i++) {
+    await db.update(tracks).set({ position: i })
+      .where(and(eq(tracks.id, trackIds[i]), eq(tracks.projectId, projectId))).run();
+  }
+
+  emitProjectUpdated(projectId, 'tracks-reordered');
+  return c.json({ success: true });
+});
+
 trackRoutes.delete('/:trackId', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');

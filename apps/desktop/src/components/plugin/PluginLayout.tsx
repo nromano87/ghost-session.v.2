@@ -30,7 +30,7 @@ import Waveform from '../tracks/Waveform';
 import FullMixDropZone from '../tracks/FullMixDropZone';
 import SocialFeed from '../social/SocialFeed';
 import TransportBar from '../audio/TransportBar';
-import { TrackWithWidth, ArrangementDropZone, ArrangementScrollView, BarRuler, BarGridOverlay, ArrangementPlayhead } from '../project/ArrangementComponents';
+import { TrackWithWidth, ArrangementDropZone, ArrangementScrollView, BarRuler, BarGridOverlay, ArrangementPlayhead, DraggableTrackList } from '../project/ArrangementComponents';
 
 // ── SamplePackContentView (tightly coupled to parent state, kept inline) ──
 
@@ -617,12 +617,7 @@ export default function PluginLayout() {
                       <ArrangementScrollView showAll={showAllBars}>
                       <BarRuler />
                       <FullMixDropZone projectId={selectedProjectId!} onFilesAdded={() => fetchProject(selectedProjectId!)} isBeat={isBeatView} compact={trackZoom === 'half'} />
-                      <div className="relative space-y-1">
-                        {[...currentProject.tracks].reverse().map((track: any) => (
-                          <TrackWithWidth key={track.id} track={track} selectedProjectId={selectedProjectId!} deleteTrack={deleteTrack} updateTrack={updateTrack} trackZoom={trackZoom} fetchProject={fetchProject} />
-                        ))}
-                        <BarGridOverlay />
-                      </div>
+                      <DraggableTrackList tracks={currentProject.tracks} selectedProjectId={selectedProjectId!} deleteTrack={deleteTrack} updateTrack={updateTrack} trackZoom={trackZoom} fetchProject={fetchProject} />
                       <ArrangementPlayhead />
                       </ArrangementScrollView>
                     </ArrangementDropZone>

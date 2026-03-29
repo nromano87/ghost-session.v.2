@@ -117,9 +117,7 @@ export default memo(function StemRow({
         transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
       />
     <div
-      draggable={!!fileId}
-      onDragStart={handleDragStart}
-      className={`group relative flex items-center rounded-xl overflow-hidden ${compact ? 'h-[48px]' : 'h-[95px]'} ${fileId ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      className={`group relative flex items-center rounded-xl overflow-hidden ${compact ? 'h-[48px]' : 'h-[95px]'}`}
       style={widthPercent !== undefined && widthPercent < 100 ? { width: `${widthPercent}%` } : undefined}
     >
       <div className="flex-1 h-full overflow-hidden bg-[#0A0412] relative">
