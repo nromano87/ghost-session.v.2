@@ -41,6 +41,72 @@
   animation: playhead-pulse 1.5s ease-in-out infinite;
 }
 
+/* Track timeline — waveform + playhead (shared workspace + auth preview) */
+@keyframes timeline-wave-bar {
+  0%, 100% {
+    transform: scaleY(0.28);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.timeline-wave-bar {
+  animation-name: timeline-wave-bar;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 0.52s;
+  transform-origin: bottom center;
+  will-change: transform, opacity;
+}
+
+@keyframes timeline-playhead-drift {
+  0%, 100% {
+    left: 16%;
+  }
+  50% {
+    left: 64%;
+  }
+}
+
+.timeline-playhead-animated {
+  animation:
+    playhead-pulse 1.4s ease-in-out infinite,
+    timeline-playhead-drift 14s ease-in-out infinite;
+}
+
+@keyframes timeline-track-strip {
+  0%, 100% {
+    opacity: 0.75;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+}
+
+.timeline-track-strip {
+  animation: timeline-track-strip 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-wave-bar,
+  .timeline-playhead-animated,
+  .timeline-track-strip {
+    animation: none !important;
+  }
+  .timeline-wave-bar {
+    transform: none;
+    opacity: 0.9;
+  }
+  .timeline-playhead-animated {
+    left: 32% !important;
+  }
+}
+
 /* Track volume slider */
 input[type="range"].track-volume {
   -webkit-appearance: none;

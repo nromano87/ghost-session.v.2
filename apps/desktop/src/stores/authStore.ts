@@ -11,6 +11,9 @@ interface AuthState {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
+  /** Paste token from DAW / JUCE WebView bootstrap (same as URL ?token= flow). */
+  applySessionToken: (token: string) => Promise<void>;
+  clearError: () => void;
   logout: () => Promise<void>;
   restore: () => void;
 }
@@ -47,6 +50,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ token: data.token, user: data.user, isAuthenticated: true, loading: false });
     } catch (err: any) {
       set({ error: err.message, loading: false });
+    }
+  },
+
+  clearError: () => set({ error: null }),
+
+  applySessionToken: async (token) => {
+    const trimmed = token.trim();
+    if (!trimmed) {
+      set({ error: 'Paste a session token to continue.' });
+      return;
+    }
+    set({ loading: true, error: null });
+    try {
+      setToken(trimmed);
+      connectSocket(trimmed);
+      localStorage.setItem('ghost_token', trimmed);
+      const user = await api.me();
+      localStorage.setItem('ghost_user', JSON.stringify(user));
+      set({ token: trimmed, user, isAuthenticated: true, loading: false });
+    } catch (err: any) {
+      setToken(null);
+      disconnectSocket();
+      localStorage.removeItem('ghost_token');
+      localStorage.removeItem('ghost_user');
+      set({
+        token: null,
+        user: null,
+        isAuthenticated: false,
+        error: err?.message || 'Invalid or expired token.',
+        loading: false,
+      });
     }
   },
 
