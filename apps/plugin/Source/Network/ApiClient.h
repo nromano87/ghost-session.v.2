@@ -37,7 +37,7 @@ public:
 
 private:
     AppState& appState;
-    juce::String baseUrl = "http://localhost:3000/v1";
+    juce::String baseUrl = "https://ghost-session-beta-production.up.railway.app/v1";
     juce::ThreadPool pool { 4 };
 
     void makeRequest(const juce::String& method, const juce::String& endpoint,

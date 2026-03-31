@@ -1,23 +1,34 @@
 import { io, Socket } from 'socket.io-client';
-import type { ClientToServerEvents, ServerToClientEvents, StreamType } from '@ghost/protocol';
+import type { ClientToServerEvents, ServerToClientEvents, StreamType, OnlineUser } from '@ghost/protocol';
 import type { PresenceInfo } from '@ghost/types';
+import { SERVER_BASE, SOCKET_TRANSPORTS } from './constants';
+
+export type { OnlineUser };
 
 type GhostSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-const SOCKET_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
+const SOCKET_URL = import.meta.env.VITE_WS_URL || SERVER_BASE;
 
 let socket: GhostSocket | null = null;
+let globalOnlineCallback: ((users: OnlineUser[]) => void) | null = null;
+
+export function onGlobalOnlineUsers(cb: (users: OnlineUser[]) => void) {
+  globalOnlineCallback = cb;
+}
 
 export function connectSocket(token: string): GhostSocket {
   if (socket?.connected) return socket;
 
   socket = io(SOCKET_URL, {
     auth: { token },
-    transports: ['websocket'],
+    transports: [...SOCKET_TRANSPORTS],
   });
 
   socket.on('connect', () => console.log('[WS] Connected'));
   socket.on('disconnect', () => console.log('[WS] Disconnected'));
+  socket.on('global:online-users', (users) => {
+    if (globalOnlineCallback) globalOnlineCallback(users);
+  });
 
   return socket;
 }
@@ -66,4 +77,8 @@ export function sendICECandidate(projectId: string, targetUserId: string, candid
 
 export function sendWebRTCLeave(projectId: string, streamType?: StreamType) {
   socket?.emit('webrtc-leave', { projectId, streamType });
+}
+
+export function sendCursorMove(projectId: string, x: number, y: number) {
+  socket?.emit('cursor-move', { projectId, x, y });
 }

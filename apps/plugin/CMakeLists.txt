@@ -112,19 +112,21 @@ target_link_libraries(GhostSession
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags
 )
 
 target_compile_definitions(GhostSession
     PUBLIC
         JUCE_WEB_BROWSER=1
-        JUCE_USE_WIN_WEBVIEW2=1
         JUCE_USE_CURL=0
         JUCE_VST3_CAN_REPLACE_VST2=0
         JUCE_DISPLAY_SPLASH_SCREEN=0
         JUCE_STRICT_REFCOUNTEDPOINTER=1
         JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
 )
+
+if(WIN32)
+    target_compile_definitions(GhostSession PUBLIC JUCE_USE_WIN_WEBVIEW2=1)
+endif()
 
 if(WIN32)
     # WebView2 SDK

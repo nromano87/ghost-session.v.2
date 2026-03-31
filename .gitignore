@@ -35,3 +35,10 @@ GhostSession/build/
 # WebView2 SDK (downloaded at build time)
 apps/plugin/webview2.nupkg
 apps/plugin/webview2_sdk/
+
+# Electron build output
+apps/electron/dist/
+apps/electron/node_modules/
+
+# Server public (built frontend, generated at deploy time)
+apps/server/public/

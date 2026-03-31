@@ -1,18 +1,20 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client';
 import * as schema from './schema.js';
-import { sql } from 'drizzle-orm';
 
-const dbPath = process.env.DATABASE_PATH || './ghost_session.db';
-const sqlite = new Database(dbPath);
-sqlite.pragma('journal_mode = WAL');
-sqlite.pragma('foreign_keys = ON');
+const isProduction = !!process.env.TURSO_DATABASE_URL;
 
-export const db = drizzle(sqlite, { schema });
+const client = createClient(
+  isProduction
+    ? { url: process.env.TURSO_DATABASE_URL!, authToken: process.env.TURSO_AUTH_TOKEN }
+    : { url: 'file:./ghost_session.db' }
+);
+
+export const db = drizzle(client, { schema });
 
 // Auto-create tables on first run
-export function initDatabase() {
-  sqlite.exec(`
+export async function initDatabase() {
+  await client.executeMultiple(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -31,10 +33,10 @@ export function initDatabase() {
       name TEXT NOT NULL,
       description TEXT DEFAULT '',
       owner_id TEXT NOT NULL REFERENCES users(id),
-      tempo REAL DEFAULT 140,
-      key TEXT DEFAULT 'C',
+      tempo REAL DEFAULT 0,
+      key TEXT DEFAULT '',
       genre TEXT DEFAULT '',
-      time_signature TEXT DEFAULT '4/4',
+      time_signature TEXT DEFAULT '',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -101,15 +103,12 @@ export function initDatabase() {
       s3_key TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
-
-
     CREATE TABLE IF NOT EXISTS track_likes (
       track_id TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at TEXT NOT NULL,
       PRIMARY KEY (track_id, user_id)
     );
-
     CREATE TABLE IF NOT EXISTS notifications (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -118,7 +117,6 @@ export function initDatabase() {
       read INTEGER DEFAULT 0,
       created_at TEXT NOT NULL
     );
-
     CREATE TABLE IF NOT EXISTS sample_packs (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -126,7 +124,6 @@ export function initDatabase() {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
-
     CREATE TABLE IF NOT EXISTS sample_pack_items (
       id TEXT PRIMARY KEY,
       pack_id TEXT NOT NULL REFERENCES sample_packs(id) ON DELETE CASCADE,
@@ -135,7 +132,6 @@ export function initDatabase() {
       position INTEGER DEFAULT 0,
       created_at TEXT NOT NULL
     );
-
     CREATE TABLE IF NOT EXISTS chat_messages (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -145,10 +141,81 @@ export function initDatabase() {
       text TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS social_posts (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      text TEXT NOT NULL,
+      project_id TEXT,
+      audio_file_id TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS social_post_likes (
+      id TEXT PRIMARY KEY,
+      post_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS social_post_comments (
+      id TEXT PRIMARY KEY,
+      post_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS social_post_reactions (
+      id TEXT PRIMARY KEY,
+      post_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      emoji TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS follows (
+      follower_id TEXT NOT NULL,
+      following_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (follower_id, following_id)
+    );
   `);
-  // Migrations for existing databases
-  try { sqlite.exec(`ALTER TABLE projects ADD COLUMN genre TEXT DEFAULT ''`); } catch {}
-  try { sqlite.exec(`ALTER TABLE versions ADD COLUMN snapshot_json TEXT`); } catch {}
 
-  console.log('  Database initialized (SQLite)');
+  // Migrations for existing databases
+  const migrations = [
+    `ALTER TABLE projects ADD COLUMN genre TEXT DEFAULT ''`,
+    `ALTER TABLE versions ADD COLUMN snapshot_json TEXT`,
+    `ALTER TABLE projects ADD COLUMN project_type TEXT DEFAULT 'project'`,
+  ];
+  for (const m of migrations) {
+    try { await client.execute(m); } catch {}
+  }
+
+  // Performance indexes on FK columns and common query paths
+  const indexes = [
+    `CREATE INDEX IF NOT EXISTS idx_project_members_user ON project_members(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_project_members_project ON project_members(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_tracks_project ON tracks(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_tracks_owner ON tracks(owner_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_versions_project ON versions(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_comments_project ON comments(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_files_project ON files(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_chat_messages_project ON chat_messages(project_id, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_invitations_invitee ON invitations(invitee_id, status)`,
+    `CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_posts_user ON social_posts(user_id, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_likes_post ON social_post_likes(post_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_likes_user ON social_post_likes(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_comments_post ON social_post_comments(post_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_social_post_reactions_post ON social_post_reactions(post_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_sample_packs_owner ON sample_packs(owner_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_sample_pack_items_pack ON sample_pack_items(pack_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions(user_id)`,
+  ];
+  for (const idx of indexes) {
+    try { await client.execute(idx); } catch {}
+  }
+
+  console.log('  Database initialized (Turso/libsql)');
 }
+
+// Export client for raw queries (admin reset etc)
+export { client };

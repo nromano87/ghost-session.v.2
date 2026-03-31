@@ -15,6 +15,7 @@ interface AuthState {
   applySessionToken: (token: string) => Promise<void>;
   clearError: () => void;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   restore: () => void;
 }
 
@@ -90,6 +91,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     setToken(null);
     localStorage.removeItem('ghost_token');
     localStorage.removeItem('ghost_user');
+    // Clear all stores and caches so the next user doesn't see old data
+    const { useProjectStore } = await import('./projectStore');
+    useProjectStore.setState({ projects: [], currentProject: null, versions: [], loading: false });
+    const { useSessionStore } = await import('./sessionStore');
+    useSessionStore.setState({ chatMessages: [], onlineUsers: [], currentProjectId: null });
+    const { clearAudioCaches } = await import('../lib/audio');
+    clearAudioCaches();
+    set({ token: null, user: null, isAuthenticated: false });
+  },
+
+  deleteAccount: async () => {
+    await api.deleteAccount();
+    disconnectSocket();
+    setToken(null);
+    localStorage.removeItem('ghost_token');
+    localStorage.removeItem('ghost_user');
+    const { clearAudioCaches } = await import('../lib/audio');
+    clearAudioCaches();
     set({ token: null, user: null, isAuthenticated: false });
   },
 

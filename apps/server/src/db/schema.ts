@@ -24,10 +24,11 @@ export const projects = sqliteTable('projects', {
   name: text('name').notNull(),
   description: text('description').default(''),
   ownerId: text('owner_id').notNull().references(() => users.id),
-  tempo: real('tempo').default(140),
-  key: text('key').default('C'),
+  tempo: real('tempo').default(0),
+  key: text('key').default(''),
   genre: text('genre').default(''),
-  timeSignature: text('time_signature').default('4/4'),
+  projectType: text('project_type').default('project'),
+  timeSignature: text('time_signature').default(''),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
 });
@@ -135,6 +136,44 @@ export const chatMessages = sqliteTable('chat_messages', {
   displayName: text('display_name').notNull(),
   colour: text('colour').notNull(),
   text: text('text').notNull(),
+  createdAt: timestamp('created_at').notNull(),
+});
+
+export const socialPosts = sqliteTable('social_posts', {
+  id: uuid().primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  projectId: text('project_id'),
+  audioFileId: text('audio_file_id'),
+  createdAt: timestamp('created_at').notNull(),
+});
+
+export const socialPostLikes = sqliteTable('social_post_likes', {
+  id: uuid().primaryKey(),
+  postId: text('post_id').notNull().references(() => socialPosts.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull(),
+});
+
+export const socialPostComments = sqliteTable('social_post_comments', {
+  id: uuid().primaryKey(),
+  postId: text('post_id').notNull().references(() => socialPosts.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  createdAt: timestamp('created_at').notNull(),
+});
+
+export const socialPostReactions = sqliteTable('social_post_reactions', {
+  id: uuid().primaryKey(),
+  postId: text('post_id').notNull().references(() => socialPosts.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  emoji: text('emoji').notNull(),
+  createdAt: timestamp('created_at').notNull(),
+});
+
+export const follows = sqliteTable('follows', {
+  followerId: text('follower_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  followingId: text('following_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').notNull(),
 });
 

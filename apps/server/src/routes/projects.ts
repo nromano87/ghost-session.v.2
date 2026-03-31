@@ -7,6 +7,8 @@ import { eq, or, and, desc, like } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
 import { createAutoSnapshot } from '../lib/autoSnapshot.js';
 import { postActivityComment } from '../lib/activityComment.js';
+import { assertMember, assertEditor } from '../lib/membership.js';
+import { emitProjectUpdated } from '../ws/index.js';
 
 const projectRoutes = new Hono();
 projectRoutes.use('*', authMiddleware);
@@ -14,9 +16,10 @@ projectRoutes.use('*', authMiddleware);
 const createProjectSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional().default(''),
-  tempo: z.number().min(30).max(300).optional().default(140),
-  key: z.string().max(10).optional().default('C'),
+  tempo: z.number().min(0).max(300).optional().default(0),
+  key: z.string().max(10).optional().default(''),
   genre: z.string().max(50).optional().default(''),
+  projectType: z.string().optional().default('project'),
   timeSignature: z.string().max(10).optional().default('4/4'),
 });
 
@@ -38,14 +41,14 @@ const inviteMemberSchema = z.object({
 projectRoutes.get('/', async (c) => {
   const user = c.get('user') as AuthUser;
 
-  const memberOf = db.select({ projectId: projectMembers.projectId })
+  const memberOf = await db.select({ projectId: projectMembers.projectId })
     .from(projectMembers)
     .where(eq(projectMembers.userId, user.id))
     .all();
 
   if (memberOf.length === 0) return c.json({ success: true, data: [] });
 
-  const result = db.select().from(projects)
+  const result = await db.select().from(projects)
     .where(or(...memberOf.map((m) => eq(projects.id, m.projectId))))
     .orderBy(desc(projects.updatedAt))
     .all();
@@ -59,15 +62,15 @@ projectRoutes.post('/', async (c) => {
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
 
-  db.insert(projects).values({
+  await db.insert(projects).values({
     id, ...body, ownerId: user.id, createdAt: now, updatedAt: now,
   }).run();
 
-  db.insert(projectMembers).values({
+  await db.insert(projectMembers).values({
     projectId: id, userId: user.id, role: 'owner', joinedAt: now,
   }).run();
 
-  const [project] = db.select().from(projects).where(eq(projects.id, id)).all();
+  const [project] = await db.select().from(projects).where(eq(projects.id, id)).all();
   return c.json({ success: true, data: project }, 201);
 });
 
@@ -75,16 +78,12 @@ projectRoutes.get('/:id', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const membership = db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
+  await assertMember(projectId, user.id);
 
-  if (membership.length === 0) throw new HTTPException(403, { message: 'Not a member' });
-
-  const [project] = db.select().from(projects).where(eq(projects.id, projectId)).limit(1).all();
+  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1).all();
   if (!project) throw new HTTPException(404, { message: 'Project not found' });
 
-  const members = db.select({
+  const members = await db.select({
     userId: projectMembers.userId,
     displayName: users.displayName,
     avatarUrl: users.avatarUrl,
@@ -95,7 +94,7 @@ projectRoutes.get('/:id', async (c) => {
     .where(eq(projectMembers.projectId, projectId))
     .all();
 
-  const projectTracks = db.select().from(tracks)
+  const projectTracks = await db.select().from(tracks)
     .where(eq(tracks.projectId, projectId))
     .orderBy(tracks.position)
     .all();
@@ -108,23 +107,18 @@ projectRoutes.patch('/:id', async (c) => {
   const projectId = c.req.param('id');
   const body = updateProjectSchema.parse(await c.req.json());
 
-  const membership = db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
+  await assertEditor(projectId, user.id);
 
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No edit permission' });
-  }
-
-  db.update(projects).set({ ...body, updatedAt: new Date().toISOString() })
+  await db.update(projects).set({ ...body, updatedAt: new Date().toISOString() })
     .where(eq(projects.id, projectId)).run();
 
-  const [updated] = db.select().from(projects).where(eq(projects.id, projectId)).all();
+  const [updated] = await db.select().from(projects).where(eq(projects.id, projectId)).all();
 
   const changes = Object.keys(body).join(', ');
-  createAutoSnapshot(projectId, user.id, `Updated project: ${changes}`);
-  postActivityComment(projectId, user.id, `✏️ updated project settings: ${changes}`);
+  await createAutoSnapshot(projectId, user.id, `Updated project: ${changes}`);
+  await postActivityComment(projectId, user.id, `✏️ updated project settings: ${changes}`);
 
+  emitProjectUpdated(projectId, 'metadata-updated');
   return c.json({ success: true, data: updated });
 });
 
@@ -132,12 +126,12 @@ projectRoutes.delete('/:id', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const [project] = db.select().from(projects).where(eq(projects.id, projectId)).limit(1).all();
+  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1).all();
   if (!project || project.ownerId !== user.id) {
     throw new HTTPException(403, { message: 'Only the owner can delete' });
   }
 
-  db.delete(projects).where(eq(projects.id, projectId)).run();
+  await db.delete(projects).where(eq(projects.id, projectId)).run();
   return c.json({ success: true });
 });
 
@@ -146,24 +140,18 @@ projectRoutes.post('/:id/members', async (c) => {
   const projectId = c.req.param('id');
   const body = inviteMemberSchema.parse(await c.req.json());
 
-  const membership = db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
-
-  if (membership.length === 0 || membership[0].role === 'viewer') {
-    throw new HTTPException(403, { message: 'No permission to invite' });
-  }
+  await assertEditor(projectId, user.id);
 
   let invitee;
   if (body.email) {
-    [invitee] = db.select().from(users).where(eq(users.email, body.email)).limit(1).all();
+    [invitee] = await db.select().from(users).where(eq(users.email, body.email)).limit(1).all();
   } else if (body.name) {
-    [invitee] = db.select().from(users).where(like(users.displayName, body.name)).limit(1).all();
+    [invitee] = await db.select().from(users).where(like(users.displayName, body.name)).limit(1).all();
   }
   if (!invitee) throw new HTTPException(404, { message: 'User not found' });
 
   // Check if already a member
-  const existing = db.select().from(projectMembers)
+  const existing = await db.select().from(projectMembers)
     .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, invitee.id)))
     .limit(1).all();
   if (existing.length > 0) {
@@ -173,7 +161,7 @@ projectRoutes.post('/:id/members', async (c) => {
   // Create a pending invitation instead of directly adding
   const invId = crypto.randomUUID();
   try {
-    db.insert(invitations).values({
+    await db.insert(invitations).values({
       id: invId,
       projectId,
       inviterId: user.id,
@@ -184,7 +172,7 @@ projectRoutes.post('/:id/members', async (c) => {
     }).run();
   } catch {} // duplicate invitation
 
-  postActivityComment(projectId, user.id, `📨 invited ${invitee.displayName} to the project`);
+  await postActivityComment(projectId, user.id, `📨 invited ${invitee.displayName} to the project`);
 
   return c.json({ success: true, message: 'Invitation sent' });
 });
@@ -195,29 +183,25 @@ projectRoutes.delete('/:id/members/:userId', async (c) => {
   const projectId = c.req.param('id');
   const targetUserId = c.req.param('userId');
 
-  // Check requester is the owner
-  const membership = db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
+  const membership = await assertMember(projectId, user.id);
 
-  if (membership.length === 0 || membership[0].role !== 'owner') {
+  if (membership.role !== 'owner') {
     throw new HTTPException(403, { message: 'Only the project owner can remove members' });
   }
 
-  // Can't remove yourself (the owner)
   if (targetUserId === user.id) {
     throw new HTTPException(400, { message: 'Cannot remove yourself from the project' });
   }
 
-  // Get the removed user's name for the activity comment
-  const [removedUser] = db.select().from(users).where(eq(users.id, targetUserId)).limit(1).all();
+  const [removedUser] = await db.select().from(users).where(eq(users.id, targetUserId)).limit(1).all();
 
-  db.delete(projectMembers)
+  await db.delete(projectMembers)
     .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, targetUserId)))
     .run();
 
-  postActivityComment(projectId, user.id, `👋 removed ${removedUser?.displayName || 'a member'} from the project`);
+  await postActivityComment(projectId, user.id, `👋 removed ${removedUser?.displayName || 'a member'} from the project`);
 
+  emitProjectUpdated(projectId, 'member-changed');
   return c.json({ success: true });
 });
 
@@ -226,24 +210,19 @@ projectRoutes.post('/:id/leave', async (c) => {
   const user = c.get('user') as AuthUser;
   const projectId = c.req.param('id');
 
-  const membership = db.select().from(projectMembers)
-    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
-    .limit(1).all();
+  const membership = await assertMember(projectId, user.id);
 
-  if (membership.length === 0) {
-    throw new HTTPException(404, { message: 'Not a member of this project' });
-  }
-
-  if (membership[0].role === 'owner') {
+  if (membership.role === 'owner') {
     throw new HTTPException(400, { message: 'Owner cannot leave the project. Transfer ownership or delete it.' });
   }
 
-  postActivityComment(projectId, user.id, `👋 left the project`);
+  await postActivityComment(projectId, user.id, `👋 left the project`);
 
-  db.delete(projectMembers)
+  await db.delete(projectMembers)
     .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, user.id)))
     .run();
 
+  emitProjectUpdated(projectId, 'member-changed');
   return c.json({ success: true });
 });
 
@@ -252,7 +231,7 @@ projectRoutes.get('/:id/chat', async (c) => {
   const projectId = c.req.param('id');
   const limit = parseInt(c.req.query('limit') || '100', 10);
 
-  const messages = db.select({
+  const messages = (await db.select({
     userId: chatMessages.userId,
     displayName: chatMessages.displayName,
     colour: chatMessages.colour,
@@ -263,7 +242,7 @@ projectRoutes.get('/:id/chat', async (c) => {
     .where(eq(chatMessages.projectId, projectId))
     .orderBy(desc(chatMessages.createdAt))
     .limit(limit)
-    .all()
+    .all())
     .reverse() // oldest first
     .map((m) => ({
       userId: m.userId,

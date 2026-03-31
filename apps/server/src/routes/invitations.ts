@@ -4,6 +4,7 @@ import { db } from '../db/index.js';
 import { invitations, projects, projectMembers, users } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { authMiddleware, type AuthUser } from '../middleware/auth.js';
+import { emitProjectUpdated } from '../ws/index.js';
 
 const invitationRoutes = new Hono();
 invitationRoutes.use('*', authMiddleware);
@@ -12,7 +13,7 @@ invitationRoutes.use('*', authMiddleware);
 invitationRoutes.get('/', async (c) => {
   const user = c.get('user') as AuthUser;
 
-  const pending = db.select({
+  const pending = await db.select({
     id: invitations.id,
     projectId: invitations.projectId,
     projectName: projects.name,
@@ -35,20 +36,18 @@ invitationRoutes.post('/:id/accept', async (c) => {
   const user = c.get('user') as AuthUser;
   const invitationId = c.req.param('id');
 
-  const [inv] = db.select().from(invitations)
+  const [inv] = await db.select().from(invitations)
     .where(and(eq(invitations.id, invitationId), eq(invitations.inviteeId, user.id)))
     .limit(1).all();
 
   if (!inv) throw new HTTPException(404, { message: 'Invitation not found' });
   if (inv.status !== 'pending') throw new HTTPException(400, { message: 'Invitation already ' + inv.status });
 
-  // Update invitation status
-  db.update(invitations).set({ status: 'accepted' })
+  await db.update(invitations).set({ status: 'accepted' })
     .where(eq(invitations.id, invitationId)).run();
 
-  // Add as project member
   try {
-    db.insert(projectMembers).values({
+    await db.insert(projectMembers).values({
       projectId: inv.projectId,
       userId: user.id,
       role: inv.role,
@@ -56,6 +55,7 @@ invitationRoutes.post('/:id/accept', async (c) => {
     }).run();
   } catch {} // already a member
 
+  emitProjectUpdated(inv.projectId, 'member-changed');
   return c.json({ success: true });
 });
 
@@ -64,13 +64,13 @@ invitationRoutes.post('/:id/decline', async (c) => {
   const user = c.get('user') as AuthUser;
   const invitationId = c.req.param('id');
 
-  const [inv] = db.select().from(invitations)
+  const [inv] = await db.select().from(invitations)
     .where(and(eq(invitations.id, invitationId), eq(invitations.inviteeId, user.id)))
     .limit(1).all();
 
   if (!inv) throw new HTTPException(404, { message: 'Invitation not found' });
 
-  db.update(invitations).set({ status: 'declined' })
+  await db.update(invitations).set({ status: 'declined' })
     .where(eq(invitations.id, invitationId)).run();
 
   return c.json({ success: true });

@@ -2,13 +2,15 @@ interface AvatarProps {
   name: string;
   src?: string | null;
   colour?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const sizeMap = {
+  xs: 'w-6 h-6 text-[9px]',
   sm: 'w-8 h-8 text-[11px]',
   md: 'w-9 h-9 text-[12px]',
   lg: 'w-11 h-11 text-sm',
+  xl: 'w-16 h-16 text-lg',
 };
 
 // Generate a consistent color from a name
@@ -24,11 +26,15 @@ export default function Avatar({ name, src, colour, size = 'md' }: AvatarProps) 
   const bg = colour || nameToColor(name);
 
   if (src) {
+    // Avatar paths are like /api/v1/auth/avatars/... — prepend server origin (strip /api/v1 if present)
+    const base = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1').replace(/\/api\/v1$/, '');
+    const imgSrc = src.startsWith('/') ? `${base}${src}` : src;
     return (
       <img
-        src={src}
+        src={imgSrc}
         alt={name}
-        className={`${sizeMap[size]} rounded-full object-cover shrink-0`}
+        draggable={false}
+        className={`${sizeMap[size]} rounded-full object-cover shrink-0 select-none`}
       />
     );
   }

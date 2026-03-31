@@ -4,7 +4,9 @@ import type {
   Project, ProjectDetail, Track, Version, Comment, User,
 } from '@ghost/types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+import { API_BASE } from './constants';
+
+const BASE_URL = API_BASE;
 
 let authToken: string | null = null;
 
@@ -33,6 +35,19 @@ export const api = {
   register: (data: RegisterRequest) => request<AuthResponse>('POST', '/auth/register', data),
   logout: () => request<void>('POST', '/auth/logout'),
   me: () => request<User>('GET', '/auth/me'),
+  deleteAccount: () => request<void>('DELETE', '/auth/account'),
+  uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers: Record<string, string> = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE_URL}/auth/avatar`, {
+      method: 'POST', headers, body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Upload failed');
+    return json.data;
+  },
 
   // Projects
   listProjects: () => request<Project[]>('GET', '/projects'),
@@ -60,6 +75,8 @@ export const api = {
     request<Track>('PATCH', `/projects/${projectId}/tracks/${trackId}`, data),
   deleteTrack: (projectId: string, trackId: string) =>
     request<void>('DELETE', `/projects/${projectId}/tracks/${trackId}`),
+  reorderTracks: (projectId: string, trackIds: string[]) =>
+    request<void>('PUT', `/projects/${projectId}/tracks/reorder`, { trackIds }),
 
   // Versions
   listVersions: (projectId: string) => request<Version[]>('GET', `/projects/${projectId}/versions`),
@@ -116,6 +133,18 @@ export const api = {
   getDirectDownloadUrl: (projectId: string, fileId: string) =>
     `${BASE_URL}/projects/${projectId}/files/${fileId}/download${authToken ? `?token=${authToken}` : ''}`,
 
+  // Download file as ArrayBuffer (for audio decoding)
+  downloadFile: async (projectId: string, fileId: string): Promise<ArrayBuffer> => {
+    const headers: Record<string, string> = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE_URL}/projects/${projectId}/files/${fileId}/download`, { headers });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Download failed: HTTP ${res.status} — ${text}`);
+    }
+    return res.arrayBuffer();
+  },
+
   // Sample Packs
   listSamplePacks: () => request<any[]>('GET', '/sample-packs'),
   createSamplePack: (data: { name: string }) => request<any>('POST', '/sample-packs', data),
@@ -126,4 +155,6 @@ export const api = {
     request<any>('POST', `/sample-packs/${packId}/items`, data),
   removeSamplePackItem: (packId: string, itemId: string) =>
     request<void>('DELETE', `/sample-packs/${packId}/items/${itemId}`),
+
+  getStorageUsage: () => request<{ usedBytes: number; limitBytes: number }>('GET', '/storage'),
 };

@@ -140,7 +140,7 @@ private:
     ProducerProfile currentUser;
     juce::String sessionId;
     juce::File downloadDirectory;
-    juce::String serverUrl = "ws://localhost:3000";
+    juce::String serverUrl = "wss://ghost-session-beta-production.up.railway.app";
     float listenVolume = 0.8f;
 
     juce::ListenerList<Listener> listeners;

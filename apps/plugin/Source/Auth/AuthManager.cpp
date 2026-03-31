@@ -28,7 +28,7 @@ void AuthManager::loginWithEmail(const juce::String& email, const juce::String& 
     pool.addJob([this, email, cb = std::move(cb)]() mutable
     {
         // Call the real auth endpoint
-        juce::URL url("http://localhost:3000/v1/auth/login");
+        juce::URL url("https://ghost-session-beta-production.up.railway.app/v1/auth/login");
 
         auto* body = new juce::DynamicObject();
         body->setProperty("email", email);

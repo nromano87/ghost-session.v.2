@@ -1,0 +1,104 @@
+name: Build Ghost Session
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-vst-mac:
+    runs-on: macos-14
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install JUCE
+        run: git clone --depth 1 --branch 8.0.4 https://github.com/juce-framework/JUCE.git
+
+      - name: Configure CMake
+        run: |
+          cd apps/plugin
+          cmake -B build -G "Unix Makefiles" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-error"
+
+      - name: Build VST3
+        run: |
+          set -e
+          cd apps/plugin
+          cmake --build build --config Release -j$(sysctl -n hw.ncpu) 2>&1
+          echo "Build exit code: $?"
+
+      - name: Verify binary exists
+        run: |
+          echo "=== Looking for VST3 binary ==="
+          find . -name "Ghost Session" -type f -not -path "*/.git/*" -not -path "*/Source/*" 2>/dev/null
+          echo "=== VST3 bundles ==="
+          find . -name "*.vst3" -not -path "*/.git/*" 2>/dev/null
+          echo "=== Artefacts directory ==="
+          find apps/plugin/build/GhostSession_artefacts -type f 2>/dev/null | head -30
+          echo "=== Binary size check ==="
+          find . -name "Ghost Session" -type f -not -path "*/Source/*" -exec ls -la {} \; 2>/dev/null
+
+      - name: Package DMG
+        run: |
+          mkdir -p dmg-content
+
+          # Find the actual VST3 binary
+          BINARY=$(find apps/plugin/build -name "Ghost Session" -type f -path "*/VST3/*" 2>/dev/null | head -1)
+          if [ -z "$BINARY" ]; then
+            echo "ERROR: No VST3 binary found. Build may have failed."
+            echo "=== All files in artefacts ==="
+            find apps/plugin/build/GhostSession_artefacts -type f 2>/dev/null
+            exit 1
+          fi
+          echo "Binary found: $BINARY ($(du -h "$BINARY" | cut -f1))"
+
+          # Find the VST3 bundle directory
+          VST3_BUNDLE=$(echo "$BINARY" | sed 's|/Contents/.*||')
+          echo "VST3 bundle: $VST3_BUNDLE"
+          cp -r "$VST3_BUNDLE" dmg-content/
+
+          # Create install script
+          printf '#!/bin/bash\nDIR="$(cd "$(dirname "$0")" && pwd)"\necho "Installing Ghost Session..."\nsudo mkdir -p "/Library/Audio/Plug-Ins/VST3"\nsudo cp -r "$DIR/Ghost Session.vst3" "/Library/Audio/Plug-Ins/VST3/"\necho "Done! Open your DAW and scan for plugins."\nread -p "Press Enter to close..."\n' > dmg-content/Install.command
+          chmod +x dmg-content/Install.command
+
+          echo "=== DMG contents ==="
+          du -sh dmg-content/*
+
+          hdiutil create -volname "Ghost Session" \
+            -srcfolder dmg-content \
+            -ov -format UDZO \
+            "Ghost-Session-macOS.dmg"
+
+          DMG_SIZE=$(du -h Ghost-Session-macOS.dmg | cut -f1)
+          echo "DMG size: $DMG_SIZE"
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ghost-Session-macOS-Installer
+          path: Ghost-Session-macOS.dmg
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Ghost-Session-macOS.dmg
+          name: "Ghost Session ${{ github.ref_name }}"
+          body: |
+            ## Ghost Session VST3 Plugin for macOS
+
+            **Download Ghost-Session-macOS.dmg below.**
+
+            ### Install
+            1. Open the DMG
+            2. Right-click Install.command and click Open
+            3. Enter your Mac password
+            4. Open your DAW and scan for plugins
+
+            Or drag Ghost Session.vst3 to /Library/Audio/Plug-Ins/VST3/

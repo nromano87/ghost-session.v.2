@@ -3,43 +3,60 @@ import type { ClientToServerEvents, ServerToClientEvents, SocketData } from '@gh
 
 type GhostSocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 
-// Track which sockets belong to which userId so we can route signals
-const userSockets = new Map<string, GhostSocket>();
+// Track all sockets per userId to support multiple tabs
+const userSockets = new Map<string, Set<GhostSocket>>();
+
+function addSocket(userId: string, socket: GhostSocket) {
+  let sockets = userSockets.get(userId);
+  if (!sockets) {
+    sockets = new Set();
+    userSockets.set(userId, sockets);
+  }
+  sockets.add(socket);
+}
+
+function removeSocket(userId: string, socket: GhostSocket) {
+  const sockets = userSockets.get(userId);
+  if (sockets) {
+    sockets.delete(socket);
+    if (sockets.size === 0) userSockets.delete(userId);
+  }
+}
+
+function emitToUser(userId: string, event: string, data: any) {
+  const sockets = userSockets.get(userId);
+  if (sockets) {
+    for (const s of sockets) {
+      (s.emit as any)(event, data);
+    }
+  }
+}
 
 export function registerWebRTCHandlers(io: Server, socket: GhostSocket) {
-  userSockets.set(socket.data.userId, socket);
+  addSocket(socket.data.userId, socket);
 
   socket.on('webrtc-offer', ({ projectId, targetUserId, offer, streamType }) => {
-    const target = userSockets.get(targetUserId);
-    if (target) {
-      target.emit('webrtc-offer', {
-        fromUserId: socket.data.userId,
-        offer,
-        streamType,
-      });
-    }
+    emitToUser(targetUserId, 'webrtc-offer', {
+      fromUserId: socket.data.userId,
+      offer,
+      streamType,
+    });
   });
 
   socket.on('webrtc-answer', ({ projectId, targetUserId, answer, streamType }) => {
-    const target = userSockets.get(targetUserId);
-    if (target) {
-      target.emit('webrtc-answer', {
-        fromUserId: socket.data.userId,
-        answer,
-        streamType,
-      });
-    }
+    emitToUser(targetUserId, 'webrtc-answer', {
+      fromUserId: socket.data.userId,
+      answer,
+      streamType,
+    });
   });
 
   socket.on('webrtc-ice-candidate', ({ projectId, targetUserId, candidate, streamType }) => {
-    const target = userSockets.get(targetUserId);
-    if (target) {
-      target.emit('webrtc-ice-candidate', {
-        fromUserId: socket.data.userId,
-        candidate,
-        streamType,
-      });
-    }
+    emitToUser(targetUserId, 'webrtc-ice-candidate', {
+      fromUserId: socket.data.userId,
+      candidate,
+      streamType,
+    });
   });
 
   socket.on('webrtc-leave', ({ projectId, streamType }) => {
@@ -51,6 +68,6 @@ export function registerWebRTCHandlers(io: Server, socket: GhostSocket) {
   });
 
   socket.on('disconnect', () => {
-    userSockets.delete(socket.data.userId);
+    removeSocket(socket.data.userId, socket);
   });
 }

@@ -6,11 +6,14 @@ import { registerSessionHandlers } from './session.js';
 import { registerPresenceHandlers } from './presence.js';
 import { registerChatHandlers } from './chat.js';
 import { registerWebRTCHandlers } from './webrtc.js';
+import { registerCursorHandlers } from './cursor.js';
 
 // Collaborator colour palette
 const COLLAB_COLOURS = [
-  '#00FFC8', '#8B5CF6', '#FF6B6B', '#4ECDC4',
-  '#FFD93D', '#FF8A5C', '#6C5CE7', '#E056C1',
+  '#1ABC9C', '#2ECC71', '#3498DB', '#9B59B6',
+  '#E91E63', '#F1C40F', '#E67E22', '#E74C3C',
+  '#00BCD4', '#FF6B6B', '#A29BFE', '#FD79A8',
+  '#00CEC9', '#6C5CE7', '#FDCB6E', '#55EFC4',
 ];
 
 /** Deterministic colour based on user ID */
@@ -34,7 +37,7 @@ export function setupWebSocket(httpServer: HTTPServer) {
       return next(new Error('Authentication required'));
     }
 
-    const user = validateSession(token);
+    const user = await validateSession(token);
     if (!user) {
       return next(new Error('Invalid token'));
     }
@@ -45,16 +48,30 @@ export function setupWebSocket(httpServer: HTTPServer) {
     next();
   });
 
+  // Track globally online users with activity
+  const globalOnline = new Map<string, { userId: string; displayName: string; currentProjectId: string | null; currentProjectName: string | null }>();
+
+  function broadcastOnlineUsers() {
+    const list = Array.from(globalOnline.values());
+    io.emit('global:online-users', list);
+  }
+
   io.on('connection', (socket) => {
     console.log(`[WS] ${socket.data.displayName} connected`);
 
+    globalOnline.set(socket.data.userId, { userId: socket.data.userId, displayName: socket.data.displayName, currentProjectId: null, currentProjectName: null });
+    broadcastOnlineUsers();
+
     registerSessionHandlers(io, socket);
-    registerPresenceHandlers(io, socket);
+    registerPresenceHandlers(io, socket, globalOnline, broadcastOnlineUsers);
     registerChatHandlers(io, socket);
     registerWebRTCHandlers(io, socket);
+    registerCursorHandlers(io, socket);
 
     socket.on('disconnect', () => {
       console.log(`[WS] ${socket.data.displayName} disconnected`);
+      globalOnline.delete(socket.data.userId);
+      broadcastOnlineUsers();
     });
   });
 
@@ -66,4 +83,9 @@ let ioInstance: SocketServer | null = null;
 
 export function getIO() {
   return ioInstance;
+}
+
+/** Emit project-updated to all clients in a project room */
+export function emitProjectUpdated(projectId: string, reason: 'track-added' | 'track-updated' | 'track-deleted' | 'version-created' | 'metadata-updated' | 'member-changed') {
+  ioInstance?.to(`project:${projectId}`).emit('project-updated', { projectId, reason });
 }

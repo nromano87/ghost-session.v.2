@@ -75,7 +75,7 @@ public:
     void getPlugins (const juce::String&, std::function<void (bool, const juce::var&)> cb) { cb(true, juce::var(juce::Array<juce::var>())); }
 
 private:
-    juce::String baseUrl = "http://localhost:3000/api/v1";
+    juce::String baseUrl = "https://ghost-session-beta-production.up.railway.app/api/v1";
     juce::String authToken;
     juce::ThreadPool pool { 2 };
 
